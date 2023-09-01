@@ -87,9 +87,8 @@ class ConvertableToPy2String(object):
         if six.PY2:
             if isinstance(text, six.text_type):
                 text = codecs.encode(text, self.encoding)
-        else:
-            if isinstance(text, six.bytes_type):
-                text = codecs.decode(text, self.encoding)
+        elif isinstance(text, six.bytes_type):
+            text = codecs.decode(text, self.encoding)
         return text
 
     if six.PY2:
@@ -186,6 +185,7 @@ class TestTextConversion(object):
     @requires_python2
     @pytest.mark.parametrize("text_value", UNICODE_TEXT_VALUES)
     def test_text__with_object_convertable_to_py2string_only(self, text_value):
+
         class ConvertableToPy2String(object):
             """Lacks feature: convertable-to-unicode (only: to-string)"""
             def __init__(self, message=""):
@@ -199,8 +199,8 @@ class TestTextConversion(object):
 
         obj = ConvertableToPy2String(text_value.encode("UTF-8"))
         actual = text(obj)
-        print(u"actual: %s" % actual)
-        print(u"text_value: %s" % text_value)
+        print(f"actual: {actual}")
+        print(f"text_value: {text_value}")
         assert actual == text_value
 
 
@@ -244,7 +244,7 @@ class TestObjectToTextConversion(object):
 
         # -- FOR: pytest < 5.0
         # expected = u"AssertionError: %s" % message
-        print("decode_error_occured(ascii)=%s" % decode_error_occured)
+        print(f"decode_error_occured(ascii)={decode_error_occured}")
         text2 = text(e.value)
         assert message in text2, "OOPS: text=%r" % text2
 
@@ -261,7 +261,7 @@ class TestObjectToTextConversion(object):
         # -- FOR: pytest < 5.0
         # expected = u"AssertionError: %s" % message
         text2 = text(e.value)
-        expected = u"%s: %s" % (exception_class.__name__, message)
+        expected = f"{exception_class.__name__}: {message}"
         assert isinstance(text2, six.text_type)
         assert exception_class.__name__ in str(e)
         assert message in text2, "OOPS: text=%r" % text2
@@ -285,10 +285,10 @@ class TestObjectToTextConversion(object):
         assert isinstance(e.value, Exception)
         text2 = text(e)
         unicode_message = bytes_message.decode(self.ENCODING)
-        expected = u"%s: %s" % (exception_class.__name__, unicode_message)
+        expected = f"{exception_class.__name__}: {unicode_message}"
         assert isinstance(text2, six.text_type)
         assert unicode_message in text2
         assert text2.endswith(expected)
         # -- DIAGNOSTICS:
-        print(u"text2: "+ text2)
-        print(u"expected: " + expected)
+        print(f"text2: {text2}")
+        print(f"expected: {expected}")

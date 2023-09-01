@@ -201,8 +201,9 @@ class Context(object):
         cleanup_func_name = getattr(cleanup_func, "__name__", None)
         if not cleanup_func_name:
             cleanup_func_name = "%r" % cleanup_func
-        print(u"CLEANUP-ERROR in %s: %s: %s" %
-              (cleanup_func_name, exception.__class__.__name__, exception))
+        print(
+            f"CLEANUP-ERROR in {cleanup_func_name}: {exception.__class__.__name__}: {exception}"
+        )
         traceback.print_exc(file=sys.stdout)
         # MAYBE: context._dump(pretty=True, prefix="Context: ")
         # -- MARK: testrun as FAILED
@@ -303,16 +304,16 @@ class Context(object):
         msg = ""
         if self._mode is ContextMode.BEHAVE and self._origin[attr] is not ContextMode.BEHAVE:
             msg = "behave runner is masking context attribute '%(attr)s' " \
-                  "originally set in %(function)s (%(filename)s:%(line)s)"
+                      "originally set in %(function)s (%(filename)s:%(line)s)"
         elif self._mode is ContextMode.USER:
             if self._origin[attr] is not ContextMode.USER:
                 msg = "user code is masking context attribute '%(attr)s' " \
-                      "originally set by behave"
+                          "originally set by behave"
             elif self._config.verbose:
                 msg = "user code is masking context attribute " \
-                    "'%(attr)s'; see the tutorial for what this means"
+                        "'%(attr)s'; see the tutorial for what this means"
         if msg:
-            msg = msg % params
+            msg %= params
             warnings.warn(msg, ContextMaskWarning, stacklevel=3)
 
     def _dump(self, pretty=False, prefix="  "):
@@ -378,10 +379,7 @@ class Context(object):
     def __contains__(self, attr):
         if attr[0] == "_":
             return attr in self.__dict__
-        for frame in self._stack:
-            if attr in frame:
-                return True
-        return False
+        return any(attr in frame for frame in self._stack)
 
     def execute_steps(self, steps_text):
         """The steps identified in the "steps" text string will be parsed and
@@ -412,9 +410,8 @@ class Context(object):
                 passed = step.run(self._runner, quiet=True, capture=False)
                 if not passed:
                     # -- ISSUE #96: Provide more substep info to diagnose problem.
-                    step_line = u"%s %s" % (step.keyword, step.name)
-                    message = "%s SUB-STEP: %s" % \
-                              (step.status.name.upper(), step_line)
+                    step_line = f"{step.keyword} {step.name}"
+                    message = f"{step.status.name.upper()} SUB-STEP: {step_line}"
                     if step.error_message:
                         message += "\nSubstep info: %s\n" % step.error_message
                         message += u"Traceback (of failed substep):\n"
@@ -439,7 +436,7 @@ class Context(object):
             if layer == frame_layer:
                 return frame
         # -- OOPS, NOT FOUND:
-        raise LookupError("Context.stack: layer=%s not found" % layer)
+        raise LookupError(f"Context.stack: layer={layer} not found")
 
     def add_cleanup(self, cleanup_func, *args, **kwargs):
         """Adds a cleanup function that is called when :meth:`Context._pop()`
@@ -549,11 +546,7 @@ def path_getrootdir(path):
         assert rootdir == r"D:\"
     """
     drive, _ = os.path.splitdrive(path)
-    if drive:
-        # -- WINDOWS:
-        return drive + os.path.sep
-    # -- POSIX:
-    return os.path.sep
+    return drive + os.path.sep if drive else os.path.sep
 
 
 class ModelRunner(object):
@@ -597,10 +590,7 @@ class ModelRunner(object):
     @property
     def aborted(self):
         """Indicates that test run is aborted by the user or system."""
-        if self.context:
-            return self.context.aborted
-        # -- OTHERWISE
-        return False
+        return self.context.aborted if self.context else False
 
     @aborted.setter
     def aborted(self, value):
@@ -625,50 +615,44 @@ class ModelRunner(object):
         self.context.abort(reason=reason)
 
     def run_hook(self, name, context, *args):
-        if not self.config.dry_run and (name in self.hooks):
-            try:
-                with context.use_with_user_mode():
-                    self.hooks[name](context, *args)
-            # except KeyboardInterrupt:
-            #     self.abort(reason="KeyboardInterrupt")
-            #     if name not in ("before_all", "after_all"):
-            #         raise
-            except Exception as e:  # pylint: disable=broad-except
-                # -- HANDLE HOOK ERRORS:
-                use_traceback = False
-                if self.config.verbose:
-                    use_traceback = True
-                    ExceptionUtil.set_traceback(e)
-                extra = u""
-                if "tag" in name:
-                    extra = "(tag=%s)" % args[0]
-
-                error_text = ExceptionUtil.describe(e, use_traceback).rstrip()
-                error_message = u"HOOK-ERROR in %s%s: %s" % (name, extra, error_text)
-                print(error_message)
-                self.hook_failures += 1
-                if "tag" in name:
-                    # -- SCENARIO or FEATURE
-                    statement = getattr(context, "scenario", context.feature)
-                elif "all" in name:
+        if self.config.dry_run or name not in self.hooks:
+            return
+        try:
+            with context.use_with_user_mode():
+                self.hooks[name](context, *args)
+        except Exception as e:  # pylint: disable=broad-except
+            # -- HANDLE HOOK ERRORS:
+            use_traceback = False
+            if self.config.verbose:
+                use_traceback = True
+                ExceptionUtil.set_traceback(e)
+            extra = f"(tag={args[0]})" if "tag" in name else u""
+            error_text = ExceptionUtil.describe(e, use_traceback).rstrip()
+            error_message = f"HOOK-ERROR in {name}{extra}: {error_text}"
+            print(error_message)
+            self.hook_failures += 1
+            if "tag" in name:
+                # -- SCENARIO or FEATURE
+                statement = getattr(context, "scenario", context.feature)
+            elif "all" in name:
                     # -- ABORT EXECUTION: For before_all/after_all
-                    self.abort(reason="HOOK-ERROR in hook=%s" % name)
-                    statement = None
-                else:
-                    # -- CASE: feature, scenario, step
-                    statement = args[0]
+                self.abort(reason=f"HOOK-ERROR in hook={name}")
+                statement = None
+            else:
+                # -- CASE: feature, scenario, step
+                statement = args[0]
 
-                if statement:
-                    # -- CASE: feature, scenario, step
-                    statement.hook_failed = True
-                    if statement.error_message:
-                        # -- NOTE: One exception/failure is already stored.
-                        #    Append only error message.
-                        statement.error_message += u"\n"+ error_message
-                    else:
-                        # -- FIRST EXCEPTION/FAILURE:
-                        statement.store_exception_context(e)
-                        statement.error_message = error_message
+            if statement:
+                # -- CASE: feature, scenario, step
+                statement.hook_failed = True
+                if statement.error_message:
+                    # -- NOTE: One exception/failure is already stored.
+                    #    Append only error message.
+                    statement.error_message += u"\n"+ error_message
+                else:
+                    # -- FIRST EXCEPTION/FAILURE:
+                    statement.store_exception_context(e)
+                    statement.error_message = error_message
 
     def setup_capture(self):
         if not self.context:
@@ -780,8 +764,7 @@ class Runner(ModelRunner):
         # pylint: disable=too-many-branches, too-many-statements
         if self.config.paths:
             if self.config.verbose:
-                print("Supplied path:", \
-                      ", ".join('"%s"' % path for path in self.config.paths))
+                print("Supplied path:", ", ".join(f'"{path}"' for path in self.config.paths))
             first_path = self.config.paths[0]
             if hasattr(first_path, "filename"):
                 # -- BETTER: isinstance(first_path, FileLocation):
@@ -790,8 +773,7 @@ class Runner(ModelRunner):
             if base_dir.startswith("@"):
                 # -- USE: behave @features.txt
                 base_dir = base_dir[1:]
-                file_locations = self.feature_locations()
-                if file_locations:
+                if file_locations := self.feature_locations():
                     base_dir = os.path.dirname(file_locations[0].filename)
             base_dir = os.path.abspath(base_dir)
 
@@ -807,10 +789,10 @@ class Runner(ModelRunner):
 
         # Get the root. This is not guaranteed to be "/" because Windows.
         root_dir = path_getrootdir(base_dir)
-        new_base_dir = base_dir
         steps_dir = self.config.steps_dir
         environment_file = self.config.environment_file
 
+        new_base_dir = base_dir
         while True:
             if self.config.verbose:
                 print("Trying base directory:", new_base_dir)
@@ -826,14 +808,15 @@ class Runner(ModelRunner):
 
         if new_base_dir == root_dir:
             if self.config.verbose:
-                if not self.config.paths:
-                    print('ERROR: Could not find "%s" directory. '\
-                          'Please specify where to find your features.' % \
-                                steps_dir)
-                else:
-                    print('ERROR: Could not find "%s" directory in your '\
-                        'specified path "%s"' % (steps_dir, base_dir))
+                if self.config.paths:
+                    print(
+                        f'ERROR: Could not find "{steps_dir}" directory in your specified path "{base_dir}"'
+                    )
 
+                else:
+                    print(
+                        f'ERROR: Could not find "{steps_dir}" directory. Please specify where to find your features.'
+                    )
             message = 'No %s directory in %r' % (steps_dir, base_dir)
             raise ConfigError(message)
 
@@ -845,12 +828,13 @@ class Runner(ModelRunner):
                 break
         else:
             if self.config.verbose:
-                if not self.config.paths:
-                    print('ERROR: Could not find any "<name>.feature" files. '\
-                        'Please specify where to find your features.')
+                if self.config.paths:
+                    print(
+                        f'ERROR: Could not find any "<name>.feature" files in your specified path "{base_dir}"'
+                    )
                 else:
-                    print('ERROR: Could not find any "<name>.feature" files '\
-                        'in your specified path "%s"' % base_dir)
+                    print('ERROR: Could not find any "<name>.feature" files. '\
+                            'Please specify where to find your features.')
             raise ConfigError('No feature files in %r' % base_dir)
 
         self.base_dir = base_dir

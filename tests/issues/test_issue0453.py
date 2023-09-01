@@ -57,6 +57,6 @@ def test_issue(encoding):
         text2 =  traceback.format_exc()
 
     text3 = text(text2, encoding)
-    print(u"EXCEPTION-TEXT: %s" % text3)
+    print(f"EXCEPTION-TEXT: {text3}")
     assert_that(text3, contains_string(u'raise Exception(u"по русски"'))
     assert_that(text3, contains_string(u"Exception: по русски"))

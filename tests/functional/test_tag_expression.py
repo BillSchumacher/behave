@@ -128,7 +128,7 @@ class TestTagExpression(object):
         ("a and b or c", False, [],         "not tags"),
     ])
     def test_not_not_expression_sameas_expression(self, tag_expression_text, expected, tags, case):
-        not2_tag_expression_text = "not not "+ tag_expression_text
+        not2_tag_expression_text = f"not not {tag_expression_text}"
         tag_expression1 = TagExpressionParser.parse(tag_expression_text)
         tag_expression2 = TagExpressionParser.parse(not2_tag_expression_text)
         value1 = tag_expression1.evaluate(tags)

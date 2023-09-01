@@ -54,7 +54,7 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     if len(args) != 2:
-        print("USAGE: %s BEHAVE_FILE.json CUCUMBER_FILE.json" % NAME)
+        print(f"USAGE: {NAME} BEHAVE_FILE.json CUCUMBER_FILE.json")
         print("Converts behave JSON dialect to cucumber JSON dialect.")
         return 1
 

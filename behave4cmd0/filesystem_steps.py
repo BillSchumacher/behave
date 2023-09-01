@@ -199,7 +199,7 @@ def step_a_file_named_filename_and_encoding_with(context, filename, encoding):
     """Creates a textual file with the content provided as docstring."""
     assert context.text is not None, "ENSURE: multiline text is provided."
     assert not os.path.isabs(filename)
-    assert is_encoding_valid(encoding), "INVALID: encoding=%s;" % encoding
+    assert is_encoding_valid(encoding), f"INVALID: encoding={encoding};"
     command_util.ensure_workdir_exists(context)
     filename2 = os.path.join(context.workdir, filename)
     pathutil.create_textfile_with_contents(filename2, context.text, encoding)

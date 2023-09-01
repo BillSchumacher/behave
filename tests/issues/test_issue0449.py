@@ -48,8 +48,8 @@ def test_issue(encoding):
         text2 = traceback.format_exc()
 
     text3 = text(text2, encoding)
-    print(u"EXCEPTION-TEXT: %s" % text3)
-    print(u"text2: "+ text2)
+    print(f"EXCEPTION-TEXT: {text3}")
+    print(f"text2: {text2}")
     assert_that(text3, contains_string(u"AssertionError: Всё очень плохо"))
 
 

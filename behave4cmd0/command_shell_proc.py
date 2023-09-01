@@ -14,9 +14,7 @@ from six import string_types
 # UTILITY:
 # -----------------------------------------------------------------------------
 def posixpath_normpath(filename):
-    if not filename:
-        return filename
-    return filename.replace("\\", "/").replace("//", "/")
+    return filename.replace("\\", "/").replace("//", "/") if filename else filename
 
 
 # -----------------------------------------------------------------------------
@@ -59,8 +57,7 @@ class TracebackLineNormalizer(LineProcessor):
             self.traceback_section = True
             # print("XXX: TRACEBACK-START")
         elif self.traceback_section:
-            matched = self.file_pattern.match(line)
-            if matched:
+            if matched := self.file_pattern.match(line):
                 # matched_range = matched.regs[1]
                 filename = matched.groups()[0]
                 new_filename = posixpath_normpath(filename)
@@ -92,8 +89,7 @@ class ExceptionWithPathNormalizer(LineProcessor):
         self.marker = marker_text
 
     def __call__(self, line):
-        matched = self.pattern.search(line)
-        if matched:
+        if matched := self.pattern.search(line):
             # -- ONLY: One pattern per line should match.
             filename = matched.groupdict()["path"]
             new_filename = posixpath_normpath(filename)
@@ -226,11 +222,10 @@ class TextProcessor(CommandOutputProcessor):
         return self.command_output_processor.process_output(text)
 
     def __call__(self, command_result):
-        if isinstance(command_result, string_types):
-            text = command_result
-            return self.command_output_processor.process_output(text)[1]
-        else:
+        if not isinstance(command_result, string_types):
             return self.command_output_processor(command_result)
+        text = command_result
+        return self.command_output_processor.process_output(text)[1]
 
 
 class BehaveWinCommandOutputProcessor(LineCommandOutputProcessor):

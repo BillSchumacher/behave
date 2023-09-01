@@ -40,5 +40,5 @@ class DryRunContext(object):
 
 
     def sudo(self, command, **kwargs):
-        command2 = "sudo %s" % command
+        command2 = f"sudo {command}"
         self.run(command2, **kwargs)

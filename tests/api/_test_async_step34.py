@@ -4,6 +4,7 @@
 Unit tests for :mod:`behave.api.async_test`.
 """
 
+
 # -- IMPORTS:
 from __future__ import absolute_import, print_function
 import sys
@@ -49,9 +50,7 @@ requires_py34_to_py37 = pytest.mark.skipif(
     reason="Supported only for python.versions: 3.4 .. 3.7 (inclusive)")
 
 
-SLEEP_DELTA = 0.050
-if sys.platform.startswith("win"):
-    SLEEP_DELTA = 0.100
+SLEEP_DELTA = 0.100 if sys.platform.startswith("win") else 0.050
 
 
 # -----------------------------------------------------------------------------

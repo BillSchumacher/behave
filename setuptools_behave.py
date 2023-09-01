@@ -83,20 +83,19 @@ class behave_test(Command):
             os.chdir(initial_dir)
 
     def _select_paths(self, path=".", pattern="*"):
-        selected = [ os.path.join(path, f)
-                     for f in os.listdir(path)  if fnmatch(f, pattern)]
-        return selected
+        return [
+            os.path.join(path, f) for f in os.listdir(path) if fnmatch(f, pattern)
+        ]
 
     def _setup_env_with_local_python_path(self, egg_install_dir):
         PYTHONPATH = os.environ.get("PYTHONPATH", "")
         pathsep = os.pathsep
         PPATH=[x for x in PYTHONPATH.split(pathsep) if x]
         PPATH.insert(0, os.getcwd())
-        local_eggs = self._select_paths(egg_install_dir, "*.egg")
-        if local_eggs:
+        if local_eggs := self._select_paths(egg_install_dir, "*.egg"):
             PPATH[1:1] = [ os.path.abspath(p) for p in local_eggs]
         os.environ["PYTHONPATH"] = pathsep.join(PPATH)
-        self.announce("Use PYTHONPATH=%s" % os.environ["PYTHONPATH"], level=3)
+        self.announce(f'Use PYTHONPATH={os.environ["PYTHONPATH"]}', level=3)
         return PYTHONPATH
 
     def run(self):
@@ -119,12 +118,10 @@ class behave_test(Command):
             # -- ALTERNATIVE: USE: behave script: behave = "behave"
             # -- USE: behave module (main)
             behave = "-m behave"
-        cmd_options = ""
-        if self.tags:
-            cmd_options = "--tags=" + " --tags=".join(self.tags)
+        cmd_options = "--tags=" + " --tags=".join(self.tags) if self.tags else ""
         if self.dry_run:
             cmd_options += " --dry-run"
-        cmd_options += " --format=%s %s" % (self.format, path)
-        self.announce("CMDLINE: python %s %s" % (behave, cmd_options), level=3)
+        cmd_options += f" --format={self.format} {path}"
+        self.announce(f"CMDLINE: python {behave} {cmd_options}", level=3)
         behave_cmd = shlex.split(behave)
         return subprocess.call([sys.executable] + behave_cmd + shlex.split(cmd_options))

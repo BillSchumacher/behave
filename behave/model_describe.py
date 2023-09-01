@@ -52,25 +52,21 @@ class ModelDescriptor(object):
             lengths = [len(escape_cell(c)) for c in row]
             cell_lengths.append(lengths)
 
-        # -- STEP: Determine max. output size for each column.
-        max_lengths = []
-        for col in range(0, len(cell_lengths[0])):
-            max_lengths.append(max([c[col] for c in cell_lengths]))
-
+        max_lengths = [
+            max(c[col] for c in cell_lengths)
+            for col in range(0, len(cell_lengths[0]))
+        ]
         # -- STEP: Build textual table description.
         lines = []
         for r, row in enumerate(all_rows):
             line = u"|"
             for c, (cell, max_length) in enumerate(zip(row, max_lengths)):
                 pad_size = max_length - cell_lengths[r][c]
-                line += u" %s%s |" % (escape_cell(cell), " " * pad_size)
+                line += f' {escape_cell(cell)}{" " * pad_size} |'
             line += u"\n"
             lines.append(line)
 
-        if indentation:
-            return indent(lines, indentation)
-        # -- OTHERWISE:
-        return u"".join(lines)
+        return indent(lines, indentation) if indentation else u"".join(lines)
 
     @staticmethod
     def describe_docstring(doc_string, indentation=None):

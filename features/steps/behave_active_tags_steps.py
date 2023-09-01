@@ -70,7 +70,7 @@ def step_then_following_active_tags_combinations_are_enabled(context):
             # -- ANNOTATE MISMATCH IN EXTRA COLUMN:
             if annotate_column_id == 0:
                 annotate_column_id = table.ensure_column_exists("MISMATCH!")
-            row.cells[annotate_column_id] = "= %s" % actual_enabled
+            row.cells[annotate_column_id] = f"= {actual_enabled}"
             mismatched_rows.append(row_index)
 
     # -- FINALLY: Ensure that there are no mismatched rows.

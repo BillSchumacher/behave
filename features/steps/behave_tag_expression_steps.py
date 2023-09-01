@@ -130,7 +130,7 @@ def step_given_named_model_elements_with_tags(context):
     for row in context.table.rows:
         name = row["name"].strip()
         tags = convert_model_element_tags(row["tags"])
-        assert name not in model_element_names, "DUPLICATED: name=%s" % name
+        assert name not in model_element_names, f"DUPLICATED: name={name}"
         model_elements.append(ModelElement(name, tags=tags))
         model_element_names.add(name)
 
@@ -157,10 +157,13 @@ def step_given_named_model_elements_with_tags(context):
         tag_expression = convert_tag_expression(tag_expression_text)
         expected_selected_names = convert_comma_list(row["selected?"])
 
-        actual_selected = []
-        for model_element in context.model_elements:
-            if tag_expression.check(model_element.tags):
-                actual_selected.append(model_element.name)
-
-        assert_that(actual_selected, equal_to(expected_selected_names),
-            "tag_expression=%s (row=%s)" % (tag_expression_text, row_index))
+        actual_selected = [
+            model_element.name
+            for model_element in context.model_elements
+            if tag_expression.check(model_element.tags)
+        ]
+        assert_that(
+            actual_selected,
+            equal_to(expected_selected_names),
+            f"tag_expression={tag_expression_text} (row={row_index})",
+        )

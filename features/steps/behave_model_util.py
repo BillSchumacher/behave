@@ -38,7 +38,7 @@ class BehaveModelBuilder(object):
     def build_feature(self, name=u"", tags=None):
         if not name:
             name = u"alice"
-        filename = u"%s.feature" % name
+        filename = f"{name}.feature"
         line = 1
         feature = Feature(filename, line, u"Feature", name, tags=tags)
         self.features.append(feature)
@@ -57,8 +57,9 @@ class BehaveModelBuilder(object):
 
     def build_unknown(self, statement, name=u"", row_index=None):
         # pylint: disable=no-self-use
-        assert False, u"UNSUPPORTED: statement=%s, name=%s (row=%s)" % \
-                      (statement, name, row_index)
+        assert (
+            False
+        ), f"UNSUPPORTED: statement={statement}, name={name} (row={row_index})"
 
     def build_model_from_table(self, table):
         table.require_columns(self.REQUIRED_COLUMNS)

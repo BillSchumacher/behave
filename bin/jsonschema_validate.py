@@ -52,11 +52,9 @@ def json_loads(text, encoding=None):
     return json.loads(text, **kwargs)
 
 def json_load(filename, encoding=None):
-    f = open(filename, "r")
-    contents = f.read()
-    f.close()
-    data = json_loads(contents, encoding=encoding)
-    return data
+    with open(filename, "r") as f:
+        contents = f.read()
+    return json_loads(contents, encoding=encoding)
 
 def jsonschema_validate(filename, schema, encoding=None):
     data = json_load(filename, encoding=encoding)
@@ -74,10 +72,7 @@ def main(args=None):
     """
     if args is None:
         args = sys.argv[1:]
-    default_schema = None
-    if os.path.exists(SCHEMA):
-        default_schema = SCHEMA
-
+    default_schema = SCHEMA if os.path.exists(SCHEMA) else None
     parser = argparse.ArgumentParser(
                 description=textwrap.dedent(main.__doc__),
                 formatter_class=argparse.RawDescriptionHelpFormatter
@@ -98,12 +93,12 @@ def main(args=None):
     if not options.schema:
         parser.error("REQUIRE: JSON schema")
     elif not os.path.isfile(options.schema):
-        parser.error("SCHEMA not found: %s" % options.schema)
+        parser.error(f"SCHEMA not found: {options.schema}")
 
     try:
         schema = json_load(options.schema, encoding=options.encoding)
     except Exception as e:
-        msg = "ERROR: %s: %s (while loading schema)" % (e.__class__.__name__, e)
+        msg = f"ERROR: {e.__class__.__name__}: {e} (while loading schema)"
         sys.exit(msg)
 
     error_count = 0
@@ -114,7 +109,7 @@ def main(args=None):
             print("validate:", filename, "...", end=' ')
             jsonschema_validate(filename, schema, encoding=options.encoding)
         except Exception as e:
-            more_info = "%s: %s" % (e.__class__.__name__, e)
+            more_info = f"{e.__class__.__name__}: {e}"
             validated = False
             error_count += 1
         if validated:

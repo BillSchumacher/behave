@@ -40,9 +40,6 @@ def step_i_run_command(context, command):
     command_util.ensure_workdir_exists(context)
     context.command_result = command_shell.run(command, cwd=context.workdir)
     command_util.workdir_save_coverage_files(context.workdir)
-    if False and DEBUG:
-        print(u"run_command: {0}".format(command))
-        print(u"run_command.output {0}".format(context.command_result.output))
 
 
 @when(u'I successfully run "{command}"')

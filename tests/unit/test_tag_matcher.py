@@ -64,8 +64,7 @@ class TestActiveTagMatcher2(object):
             "foo": "alice",
             "bar": "BOB",
         }
-        tag_matcher = cls.TagMatcher(value_provider)
-        return tag_matcher
+        return cls.TagMatcher(value_provider)
 
     @pytest.mark.parametrize("case, expected_len, tags", [
         ("case: Two enabled tags", 2,
@@ -138,8 +137,8 @@ class TestActiveTagMatcher2(object):
     def test_should_exclude_with__combinations_with_same_category(self,
                                                         case, expected, tags):
         tag_matcher = self.make_tag_matcher()
-        print("tags: {}".format(tags) )
-        print("tag_matcher.value: {}".format(tag_matcher.value_provider) )
+        print(f"tags: {tags}")
+        print(f"tag_matcher.value: {tag_matcher.value_provider}")
         actual_result = tag_matcher.should_exclude_with(tags)
         assert expected == actual_result, case
 
@@ -150,8 +149,7 @@ class TestActiveTagMatcher1(TestCase):
 
     @classmethod
     def make_tag_matcher(cls):
-        tag_matcher = cls.TagMatcher(cls.traits.value_provider)
-        return tag_matcher
+        return cls.TagMatcher(cls.traits.value_provider)
 
     def setUp(self):
         self.tag_matcher = self.make_tag_matcher()
@@ -235,8 +233,11 @@ class TestActiveTagMatcher1(TestCase):
         ]
         enabled = True  # EXPECTED
         for tags, case in test_patterns:
-            self.assertEqual(not enabled, self.tag_matcher.should_exclude_with(tags),
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(
+                not enabled,
+                self.tag_matcher.should_exclude_with(tags),
+                f"{case}: tags={tags}",
+            )
 
     def test_should_exclude_with__returns_true_with_other_tag(self):
         traits = self.traits
@@ -251,8 +252,11 @@ class TestActiveTagMatcher1(TestCase):
             ([ "foo", traits.category1_disabled_tag, "bar" ], "case: middle"),
         ]
         for tags, case in test_patterns:
-            self.assertEqual(True, self.tag_matcher.should_exclude_with(tags),
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(
+                True,
+                self.tag_matcher.should_exclude_with(tags),
+                f"{case}: tags={tags}",
+            )
 
     def test_should_exclude_with__returns_true_with_similar_tag(self):
         traits = self.traits
@@ -267,8 +271,11 @@ class TestActiveTagMatcher1(TestCase):
             ([ "foo", traits.category1_similar_tag, "bar" ], "case: middle"),
         ]
         for tags, case in test_patterns:
-            self.assertEqual(True, self.tag_matcher.should_exclude_with(tags),
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(
+                True,
+                self.tag_matcher.should_exclude_with(tags),
+                f"{case}: tags={tags}",
+            )
 
     def test_should_exclude_with__returns_false_without_category_tag(self):
         test_patterns = [
@@ -277,8 +284,11 @@ class TestActiveTagMatcher1(TestCase):
             ([ "foo", "bar" ], "case: Two tags"),
         ]
         for tags, case in test_patterns:
-            self.assertEqual(False, self.tag_matcher.should_exclude_with(tags),
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(
+                False,
+                self.tag_matcher.should_exclude_with(tags),
+                f"{case}: tags={tags}",
+            )
 
     def test_should_exclude_with__returns_false_with_unknown_category_tag(self):
         """Tags from unknown categories, not supported by value_provider,
@@ -319,8 +329,7 @@ class TestActiveTagMatcher1(TestCase):
         ]
         for case, expected, tags in test_patterns:
             actual_result = self.tag_matcher.should_exclude_with(tags)
-            self.assertEqual(expected, actual_result,
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(expected, actual_result, f"{case}: tags={tags}")
 
     def test_should_run_with__negates_result_of_should_exclude_with(self):
         traits = self.traits
@@ -339,8 +348,8 @@ class TestActiveTagMatcher1(TestCase):
         for tags, case in test_patterns:
             result1 = self.tag_matcher.should_run_with(tags)
             result2 = self.tag_matcher.should_exclude_with(tags)
-            self.assertEqual(result1, not result2, "%s: tags=%s" % (case, tags))
-            self.assertEqual(not result1, result2, "%s: tags=%s" % (case, tags))
+            self.assertEqual(result1, not result2, f"{case}: tags={tags}")
+            self.assertEqual(not result1, result2, f"{case}: tags={tags}")
 
 
 class TestPredicateTagMatcher(TestCase):
@@ -408,8 +417,7 @@ class TestCompositeTagMatcher(TestCase):
         ]
         for case, tags in test_patterns:
             actual_result = self.ctag_matcher.should_exclude_with(tags)
-            self.assertEqual(True, actual_result,
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(True, actual_result, f"{case}: tags={tags}")
 
             actual_true_count = self.count_tag_matcher_with_result(
                                 self.ctag_matcher.tag_matchers, tags, True)
@@ -422,8 +430,7 @@ class TestCompositeTagMatcher(TestCase):
         ]
         for case, tags in test_patterns:
             actual_result = self.ctag_matcher.should_exclude_with(tags)
-            self.assertEqual(False, actual_result,
-                             "%s: tags=%s" % (case, tags))
+            self.assertEqual(False, actual_result, f"{case}: tags={tags}")
 
             actual_true_count = self.count_tag_matcher_with_result(
                                     self.ctag_matcher.tag_matchers, tags, True)

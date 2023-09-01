@@ -35,11 +35,6 @@ def setup_path(invoke_minversion=None):
     if not os.path.isdir(TASKS_VENDOR_DIR):
         # SILENT: print("SKIP: TASKS_VENDOR_DIR=%s is missing" % os.path.relpath(TASKS_VENDOR_DIR))
         return
-    elif os.path.abspath(TASKS_VENDOR_DIR) in sys.path:
-        # -- SETUP ALREADY DONE:
-        # return
-        pass
-
     use_vendor_bundles = os.environ.get("INVOKE_TASKS_USE_VENDOR_BUNDLES", "no")
     if need_vendor_bundles(invoke_minversion):
         use_vendor_bundles = "yes"
@@ -49,7 +44,7 @@ def setup_path(invoke_minversion=None):
         if setup_path_for_bundle(INVOKE_BUNDLE, pos=1):
             import invoke
             bundle_path = os.path.relpath(INVOKE_BUNDLE, os.getcwd())
-            print("USING: %s (version: %s)" % (bundle_path, invoke.__version__))
+            print(f"USING: {bundle_path} (version: {invoke.__version__})")
     else:
         # -- BEST-EFFORT: May rescue something
         syspath_append(os.path.abspath(TASKS_VENDOR_DIR))
@@ -76,8 +71,7 @@ def require_invoke_minversion(min_version, verbose=False):
         invoke_version = "__NOT_INSTALLED"
 
     if invoke_version < min_version:
-        message = "REQUIRE: invoke.version >= %s (but was: %s)" % \
-                  (min_version, invoke_version)
+        message = f"REQUIRE: invoke.version >= {min_version} (but was: {invoke_version})"
         message += "\nUSE: pip install invoke>=%s" % min_version
         raise VersionRequirementError(message)
 
@@ -85,13 +79,12 @@ def require_invoke_minversion(min_version, verbose=False):
     INVOKE_VERSION = os.environ.get("INVOKE_VERSION", None)
     if verbose and not INVOKE_VERSION:
         os.environ["INVOKE_VERSION"] = invoke_version
-        print("USING: invoke.version=%s" % invoke_version)
+        print(f"USING: invoke.version={invoke_version}")
 
 
 def need_vendor_bundles(invoke_minversion=None):
     invoke_minversion = invoke_minversion or "0.0.0"
-    need_vendor_answers = []
-    need_vendor_answers.append(need_vendor_bundle_invoke(invoke_minversion))
+    need_vendor_answers = [need_vendor_bundle_invoke(invoke_minversion)]
     # -- REQUIRE: path.py
     try:
         import path
@@ -113,9 +106,7 @@ def need_vendor_bundle_invoke(invoke_minversion="0.0.0"):
         if need_bundle:
             del sys.modules["invoke"]
             del invoke
-    except ImportError:
-        need_bundle = True
-    except Exception:   # pylint: disable=broad-except
+    except Exception:
         need_bundle = True
     return need_bundle
 

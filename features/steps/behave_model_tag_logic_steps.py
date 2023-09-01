@@ -101,5 +101,8 @@ def step_then_scenarios_are_selected_with_cmdline(context):
         actual_selected = [scenario.name  for scenario in selected]
 
         # -- CHECK:
-        assert_that(actual_selected, equal_to(expected_selected_names),
-                    "cmdline=%s (row=%s)" % (cmdline, row_index))
+        assert_that(
+            actual_selected,
+            equal_to(expected_selected_names),
+            f"cmdline={cmdline} (row={row_index})",
+        )

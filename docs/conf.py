@@ -99,7 +99,7 @@ master_doc = "index"
 if USE_SPHINX_INTERNATIONAL:
     locale_dirs = ["locale/"]   # path is example but recommended.
     gettext_compact = False     # optional.
-    print("USE SPHINX-INTL: locale_dirs=%s" % ",".join(locale_dirs))
+    print(f'USE SPHINX-INTL: locale_dirs={",".join(locale_dirs)}')
 
 # STEPS:
 #   make gettext
@@ -112,7 +112,7 @@ if USE_SPHINX_INTERNATIONAL:
 # -----------------------------------------------------------------------------
 project = u"behave"
 authors = u"Jens Engel, Benno Rice and Richard Jones"
-copyright = u"2012-2021, %s" % authors
+copyright = f"2012-2021, {authors}"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -169,10 +169,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = "kr"
-html_theme = "bootstrap"
-if ON_READTHEDOCS:
-    html_theme = "default"
-
+html_theme = "default" if ON_READTHEDOCS else "bootstrap"
 if html_theme == "bootstrap":
     # See sphinx-bootstrap-theme for documentation of these options
     # https://github.com/ryan-roemer/sphinx-bootstrap-theme
@@ -185,7 +182,7 @@ if html_theme == "bootstrap":
     # Add any paths that contain custom themes here, relative to this directory.
     html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
-elif html_theme in ("default", "kr"):
+elif html_theme in {"default", "kr"}:
     html_theme_path = ["_themes"]
     html_logo = "_static/behave_logo1.png"
 

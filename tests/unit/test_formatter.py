@@ -212,8 +212,9 @@ class MultipleFormattersTests(FormatterTests):
     def setUp(self):
         self.config = Mock()
         self.config.color = True
-        self.config.outputs = [StreamOpener(stream=sys.stdout)
-                               for i in self.formatters]
+        self.config.outputs = [
+            StreamOpener(stream=sys.stdout) for _ in self.formatters
+        ]
         self.config.format = self.formatters
 
     def _formatters(self, file_object, config): # pylint: disable=no-self-use

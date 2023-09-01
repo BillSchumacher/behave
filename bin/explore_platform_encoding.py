@@ -12,12 +12,12 @@ from behave.textutil import select_best_encoding
 
 def explore_platform_encoding():
     python_version = platform.python_version()
-    print("python %s (platform: %s, %s, %s)" % (python_version, sys.platform,
-                                            platform.python_implementation(),
-                                            platform.platform()))
-    print("sys.getfilesystemencoding():   %s" % sys.getfilesystemencoding())
-    print("locale.getpreferredencoding(): %s" % locale.getpreferredencoding())
-    print("behave.textutil.select_best_encoding(): %s" % select_best_encoding())
+    print(
+        f"python {python_version} (platform: {sys.platform}, {platform.python_implementation()}, {platform.platform()})"
+    )
+    print(f"sys.getfilesystemencoding():   {sys.getfilesystemencoding()}")
+    print(f"locale.getpreferredencoding(): {locale.getpreferredencoding()}")
+    print(f"behave.textutil.select_best_encoding(): {select_best_encoding()}")
     return 0
 
 if __name__ == "__main__":

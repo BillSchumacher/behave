@@ -58,7 +58,7 @@ AssertionError
         # -- NOTE: Explicit use of problematic encoding
         problematic_encoding = "unicode-escape"
         text2 = text(self.traceback_bytes, problematic_encoding)
-        print("TEXT: "+ text2)
+        print(f"TEXT: {text2}")
         assert isinstance(self.traceback_bytes, bytes)
         assert isinstance(text2, six.text_type)
 

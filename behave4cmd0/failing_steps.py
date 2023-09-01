@@ -28,7 +28,7 @@ def step_fails(context, word):
 @step(u'{word:w} step fails with "{message}"')
 def step_fails_with_message(context, word, message):
     """Step that always fails, mostly needed in examples."""
-    assert False, "FAILED: %s" % message
+    assert False, f"FAILED: {message}"
 
 @step(u'{word:w} step fails with')
 def step_fails_with_text(context, word):
@@ -39,7 +39,7 @@ def step_fails_with_text(context, word):
 @then(u'it should fail because "{reason}"')
 def then_it_should_fail_because(context, reason):
     """Self documenting step that indicates why this step should fail."""
-    assert False, "FAILED: %s" % reason
+    assert False, f"FAILED: {reason}"
 
 # @step(u'an error should fail because "{reason}"')
 # def then_it_should_fail_because(context, reason):

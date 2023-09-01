@@ -216,13 +216,11 @@ class Command(object):
 
     @property
     def usage(self):
-        usage = getattr(self.func, "usage", None)
-        return usage
+        return getattr(self.func, "usage", None)
 
     @property
     def short_description(self):
-        short_description = getattr(self.func, "short", "")
-        return short_description
+        return getattr(self.func, "short", "")
 
     @property
     def description(self):

@@ -121,8 +121,9 @@ class RunnerPlugin(object):
         except (ImportError, InvalidClassError, TypeError) as e:
             # -- CASE: ModuleNotFoundError, ClassNotFoundError, InvalidClassError, ...
             if verbose:
-                print("BAD_RUNNER_CLASS: FAILED to load runner.class=%s (%s)" % \
-                      (runner_class_name, e.__class__.__name__))
+                print(
+                    f"BAD_RUNNER_CLASS: FAILED to load runner.class={runner_class_name} ({e.__class__.__name__})"
+                )
             raise
 
     @classmethod
@@ -140,7 +141,7 @@ class RunnerPlugin(object):
         except (ImportError, TypeError) as e:
             problem_description = e.__class__.__name__
             if use_details:
-                problem_description = "%s: %s" % (problem_description, str(e))
+                problem_description = f"{problem_description}: {str(e)}"
         return problem_description
 
     def make_runner(self, config, **runner_kwargs):
@@ -162,12 +163,12 @@ class RunnerPlugin(object):
             # -- CASE: Using runner-name (alias) or scoped_class_name.
             runner_name = self.runner_name or config.runner
             runner_aliases = {}
-            runner_aliases.update(config.runner_aliases)
+            runner_aliases |= config.runner_aliases
             runner_aliases.update(self.runner_aliases)
             scoped_class_name = runner_aliases.get(runner_name, runner_name)
             if scoped_class_name == runner_name and ":" not in scoped_class_name:
                 # -- CASE: runner-alias is not in config-file section="behave.runner".
-                raise ConfigError("runner=%s (RUNNER-ALIAS NOT FOUND)" % scoped_class_name)
+                raise ConfigError(f"runner={scoped_class_name} (RUNNER-ALIAS NOT FOUND)")
             runner_class = self.load_class(scoped_class_name)
         else:
             self.validate_class(runner_class)

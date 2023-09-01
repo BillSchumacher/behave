@@ -57,10 +57,8 @@ def behave_no_background(ctx):
 
     :param ctx: Context object to use (during a test run).
     """
-    # -- SETUP-PART-ONLY: Disable background inheritance (for scenarios only).
-    current_scenario = ctx.scenario
-    if current_scenario:
-        print("FIXTURE-HINT: DISABLE-BACKGROUND FOR: %s" % current_scenario.name)
+    if current_scenario := ctx.scenario:
+        print(f"FIXTURE-HINT: DISABLE-BACKGROUND FOR: {current_scenario.name}")
         current_scenario.use_background = False
 
 

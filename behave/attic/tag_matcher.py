@@ -64,10 +64,7 @@ class OnlyWithCategoryTagMatcher(TagMatcher):
 
     def should_exclude_with(self, tags):
         category_tags = self.select_category_tags(tags)
-        if category_tags and self.active_tag not in category_tags:
-            return True
-        # -- OTHERWISE: feature/scenario with theses tags should run.
-        return False
+        return bool(category_tags and self.active_tag not in category_tags)
 
     def select_category_tags(self, tags):
         return [tag  for tag in tags
@@ -81,7 +78,7 @@ class OnlyWithCategoryTagMatcher(TagMatcher):
         if value_sep is None:
             value_sep = cls.value_separator
         value = value or ""
-        return "%s%s%s%s" % (tag_prefix, category, value_sep, value)
+        return f"{tag_prefix}{category}{value_sep}{value}"
 
 
 class OnlyWithAnyCategoryTagMatcher(TagMatcher):
@@ -159,10 +156,8 @@ class OnlyWithAnyCategoryTagMatcher(TagMatcher):
             elif active_value == value:
                 # -- CASE: Active category value selected, decision should run.
                 exclude_decision_map[category] = False
-            else:
-                # -- CASE: Inactive category value selected, may exclude it.
-                if category not in exclude_decision_map:
-                    exclude_decision_map[category] = True
+            elif category not in exclude_decision_map:
+                exclude_decision_map[category] = True
         return any(exclude_decision_map.values())
 
     def select_category_tags(self, tags):

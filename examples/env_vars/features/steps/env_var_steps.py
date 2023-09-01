@@ -11,8 +11,11 @@ import sys
 def step_impl(context, environment_variable):
       env_value = os.environ.get(environment_variable, None)
       if env_value is None:
-           raise LookupError("Environment variable '%s' is undefined" % environment_variable)
-      print("USE ENVIRONMENT-VAR: %s = %s  (variant 1)" % (environment_variable, env_value))
+            raise LookupError(
+                f"Environment variable '{environment_variable}' is undefined")
+      print(
+          f"USE ENVIRONMENT-VAR: {environment_variable} = {env_value}  (variant 1)"
+      )
 
 
 # -- VARIANT 2: Use type converter
@@ -32,7 +35,6 @@ register_type(EnvironmentVar=parse_environment_var)
 def step_impl(context, environment_variable):
       env_name, env_value = environment_variable
       if env_value is None:
-           raise LookupError("Environment variable '%s' is undefined" % env_name)
-      print("USE ENVIRONMENT-VAR: %s = %s  (variant 2)" \
-            % (env_name, env_value))
+            raise LookupError(f"Environment variable '{env_name}' is undefined")
+      print(f"USE ENVIRONMENT-VAR: {env_name} = {env_value}  (variant 2)")
 

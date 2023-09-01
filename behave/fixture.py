@@ -268,7 +268,7 @@ def use_fixture_by_tag(tag, context, fixture_registry):
     """
     fixture_data = fixture_registry.get(tag, None)
     if fixture_data is None:
-        raise LookupError("Unknown fixture-tag: %s" % tag)
+        raise LookupError(f"Unknown fixture-tag: {tag}")
 
     if callable(fixture_data):
         fixture_func = fixture_data

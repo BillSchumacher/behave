@@ -74,11 +74,8 @@ class Match(Replayable):
             self.location = self.make_location(func)
 
     def __repr__(self):
-        if self.func:
-            func_name = self.func.__name__
-        else:
-            func_name = '<no function>'
-        return '<Match %s, %s>' % (func_name, self.location)
+        func_name = self.func.__name__ if self.func else '<no function>'
+        return f'<Match {func_name}, {self.location}>'
 
     def __eq__(self, other):
         if not isinstance(other, Match):
@@ -227,9 +224,7 @@ class Matcher(object):
         except Exception as e:  # pylint: disable=broad-except
             return MatchWithError(self.func, e)
 
-        if result is None:
-            return None     # -- NO-MATCH
-        return Match(self.func, result)
+        return None if result is None else Match(self.func, result)
 
     def __repr__(self):
         return u"<%s: %r>" % (self.__class__.__name__, self.pattern)
@@ -328,7 +323,7 @@ class RegexMatcher(Matcher):
         NOTE:
         This functionality is not supported for :class:`RegexMatcher` classes.
         """
-        raise NotSupportedWarning("%s.register_type" % cls.__name__)
+        raise NotSupportedWarning(f"{cls.__name__}.register_type")
 
     @classmethod
     def clear_registered_types(cls):
@@ -344,7 +339,7 @@ class RegexMatcher(Matcher):
         if not m:
             return None
 
-        groupindex = dict((y, x) for x, y in self.regex.groupindex.items())
+        groupindex = {y: x for x, y in self.regex.groupindex.items()}
         args = []
         for index, group in enumerate(m.groups()):
             index += 1
@@ -366,9 +361,10 @@ class SimplifiedRegexMatcher(RegexMatcher):
     """
 
     def __init__(self, func, pattern, step_type=None):
-        assert not (pattern.startswith("^") or pattern.endswith("$")), \
-            "Regular expression should not use begin/end-markers: "+ pattern
-        expression = "^%s$" % pattern
+        assert not (
+            pattern.startswith("^") or pattern.endswith("$")
+        ), f"Regular expression should not use begin/end-markers: {pattern}"
+        expression = f"^{pattern}$"
         super(SimplifiedRegexMatcher, self).__init__(func, expression, step_type)
         self.pattern = pattern
 

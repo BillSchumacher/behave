@@ -89,8 +89,7 @@ def make_log_record_output(category, level, message,
     if not category or (category == "__ROOT__"):
         category = "root"
     levelname = logging.getLevelName(level)
-    record_data = dict(name=category, levelname=levelname, msg=message)
-    record_data.update(kwargs)
+    record_data = dict(name=category, levelname=levelname, msg=message) | kwargs
     record = logging.makeLogRecord(record_data)
     formatter = logging.Formatter(format, datefmt=datefmt)
     return formatter.format(record)
@@ -186,8 +185,9 @@ def step_I_create_logrecord_with_table(context):
 def step_I_define_logrecord_schema_with_table(context):
     assert context.table, "REQUIRE: context.table"
     context.table.require_columns(["category", "level", "message"])
-    assert len(context.table.rows) == 1, \
-        "REQUIRE: context.table.rows.size(%s) == 1" % (len(context.table.rows))
+    assert (
+        len(context.table.rows) == 1
+    ), f"REQUIRE: context.table.rows.size({len(context.table.rows)}) == 1"
 
     row = context.table.rows[0]
     row_schema = dict(category=row["category"], level=row["level"],
@@ -364,12 +364,12 @@ def step_use_log_record_configuration(context):
     for row in context.table.rows:
         property_name = row["property"]
         value = row["value"]
-        if property_name == "format":
-            context.log_record_format = value
-        elif property_name == "datefmt":
+        if property_name == "datefmt":
             context.log_record_datefmt = value
+        elif property_name == "format":
+            context.log_record_format = value
         else:
-            raise KeyError("Unknown property=%s" % property_name)
+            raise KeyError(f"Unknown property={property_name}")
 
 
 # -----------------------------------------------------------------------------
@@ -391,6 +391,3 @@ def step_I_capture_logrecords(context):
     :param context:
     """
     raise NotImplementedError()
-    logcapture = getattr(context, "logcapture", None)
-    if not logcapture:
-        context.logcapture = LoggingCapture()

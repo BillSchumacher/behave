@@ -34,9 +34,9 @@ class TagExpression(object):
         if tag.startswith('@'):
             tag = tag[1:]
         elif tag.startswith('-@') or tag.startswith('~@'):
-            tag = '-' + tag[2:]
+            tag = f'-{tag[2:]}'
         elif tag.startswith('~'):
-            tag = '-' + tag[1:]
+            tag = f'-{tag[1:]}'
         return tag
 
     @classmethod
@@ -60,10 +60,7 @@ class TagExpression(object):
 
             if tag:
                 limit = int(tag[0])
-                if negated:
-                    tag_without_negation = tag_with_negation[1:]
-                else:
-                    tag_without_negation = tag_with_negation
+                tag_without_negation = tag_with_negation[1:] if negated else tag_with_negation
                 limited = tag_without_negation in self.limits
                 if limited and self.limits[tag_without_negation] != limit:
                     msg = "Inconsistent tag limits for {0}: {1:d} and {2:d}"
@@ -100,13 +97,11 @@ class TagExpression(object):
 
     def __str__(self):
         """Conversion back into string that represents this tag expression."""
-        and_parts = []
-        for or_terms in self.ands:
-            and_parts.append(u",".join(or_terms))
+        and_parts = [u",".join(or_terms) for or_terms in self.ands]
         return u" ".join(and_parts)
 
     def __repr__(self):
-        class_name = self.__class__.__name__ +"_v1"
+        class_name = f"{self.__class__.__name__}_v1"
         and_parts = []
         # TODO
         # for or_terms in self.ands:
@@ -123,15 +118,15 @@ class TagExpression(object):
                 or_parts = []
                 for or_term in or_terms:
                     or_parts.extend(or_term.split())
-                and_parts.append(u"Or(%s)" % ", ".join(or_parts))
-            expression = u"And(%s)" % u",".join([and_part for and_part in and_parts])
+                and_parts.append(f'Or({", ".join(or_parts)})')
+            expression = f'And({",".join(list(and_parts))})'
             if len(self.ands) == 1:
                 expression = and_parts[0]
 
         # expression = u"And(%s)" % u",".join([or_term.split()
         #                                      for or_terms in self.ands
         #                                      for or_term in or_terms])
-        return "<%s: expression=%s>" % (class_name, expression)
+        return f"<{class_name}: expression={expression}>"
 
     if six.PY2:
         __unicode__ = __str__

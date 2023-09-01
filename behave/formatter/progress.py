@@ -58,7 +58,7 @@ class ProgressFormatterBase(Formatter):
     def feature(self, feature):
         self.current_rule = None
         self.current_feature = feature
-        self.stream.write("%s  " % six.text_type(feature.filename))
+        self.stream.write(f"{six.text_type(feature.filename)}  ")
         self.stream.flush()
 
     def rule(self, rule):
@@ -161,9 +161,6 @@ class ScenarioProgressFormatter(ProgressFormatterBase):
         # -- NORMAL-CASE:
         status_name = self.current_scenario.status.name
         dot_status = self.dot_status[status_name]
-        if status_name == "failed":
-            # MAYBE TODO: self.failures.append(result)
-            pass
         self.stream.write(dot_status)
         self.stream.flush()
 
@@ -227,7 +224,7 @@ class ScenarioStepProgressFormatter(StepProgressFormatter):
     def feature(self, feature):
         self.current_rule = None
         self.current_feature = feature
-        self.stream.write(u"%s    # %s" % (feature.name, feature.filename))
+        self.stream.write(f"{feature.name}    # {feature.filename}")
 
     def rule(self, rule):
         self.current_rule = rule
@@ -249,7 +246,7 @@ class ScenarioStepProgressFormatter(StepProgressFormatter):
             prefix += u"  "
         if scenario_name:
             scenario_name += " "
-        self.stream.write(u"%s%s " % (prefix, scenario_name))
+        self.stream.write(f"{prefix}{scenario_name} ")
         self.stream.flush()
 
     # -- DISABLED:
@@ -276,24 +273,25 @@ class ScenarioStepProgressFormatter(StepProgressFormatter):
         self.failures = []
 
     def report_failures(self):
-        if self.failures:
-            separator = "-" * 80
-            self.stream.write(u"%s\n" % separator)
-            unicode_errors = 0
-            for step in self.failures:
-                try:
-                    self.stream.write(u"FAILURE in step '%s' (%s):\n" % \
+        if not self.failures:
+            return
+        separator = "-" * 80
+        self.stream.write(u"%s\n" % separator)
+        unicode_errors = 0
+        for step in self.failures:
+            try:
+                self.stream.write(u"FAILURE in step '%s' (%s):\n" % \
                                       (step.name, step.location))
-                    self.stream.write(u"%s\n" % step.error_message)
-                    self.stream.write(u"%s\n" % separator)
-                except UnicodeError as e:
-                    self.stream.write(u"%s while reporting failure in %s\n" % \
+                self.stream.write(u"%s\n" % step.error_message)
+                self.stream.write(u"%s\n" % separator)
+            except UnicodeError as e:
+                self.stream.write(u"%s while reporting failure in %s\n" % \
                                       (e.__class__.__name__, step.location))
-                    self.stream.write(u"ERROR: %s\n" % \
+                self.stream.write(u"ERROR: %s\n" % \
                                       _text(e, encoding=self.stream.encoding))
-                    unicode_errors += 1
+                unicode_errors += 1
 
-            if unicode_errors:
-                msg = u"HINT: %d unicode errors occured during failure reporting.\n"
-                self.stream.write(msg % unicode_errors)
-            self.stream.flush()
+        if unicode_errors:
+            msg = u"HINT: %d unicode errors occured during failure reporting.\n"
+            self.stream.write(msg % unicode_errors)
+        self.stream.flush()

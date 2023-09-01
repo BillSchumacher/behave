@@ -12,7 +12,7 @@ import behave.active_tag.python_feature
 # -- MATCHES ANY TAGS: @use.with_{category}={value}
 # NOTE: active_tag_value_provider provides category values for active tags.
 active_tag_value_provider = {}
-active_tag_value_provider.update(behave.active_tag.python.ACTIVE_TAG_VALUE_PROVIDER)
+active_tag_value_provider |= behave.active_tag.python.ACTIVE_TAG_VALUE_PROVIDER
 active_tag_value_provider.update(behave.active_tag.python_feature.ACTIVE_TAG_VALUE_PROVIDER)
 active_tag_matcher = ActiveTagMatcher(active_tag_value_provider)
 
@@ -55,4 +55,4 @@ def setup_python_path():
     # -- NEEDED-FOR: formatter.user_defined.feature
     import os
     PYTHONPATH = os.environ.get("PYTHONPATH", "")
-    os.environ["PYTHONPATH"] = "."+ os.pathsep + PYTHONPATH
+    os.environ["PYTHONPATH"] = f".{os.pathsep}{PYTHONPATH}"

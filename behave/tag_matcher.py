@@ -54,11 +54,7 @@ class ValueObject(object):
 
     @property
     def value(self):
-        if callable(self._value):
-            # -- SUPPORT: Lazy computation of current-value.
-            return self._value()
-        # -- OTHERWISE:
-        return self._value
+        return self._value() if callable(self._value) else self._value
 
     def matches(self, tag_value):
         """Comparison between current value and :param:`tag_value`.
@@ -71,8 +67,9 @@ class ValueObject(object):
     @staticmethod
     def on_type_conversion_error(tag_value, e):
         logger = logging.getLogger("behave.active_tags")
-        logger.error("TYPE CONVERSION ERROR: active_tag.value='%s' (error: %s)" % \
-                     (tag_value, str(e)))
+        logger.error(
+            f"TYPE CONVERSION ERROR: active_tag.value='{tag_value}' (error: {str(e)})"
+        )
         # MAYBE: logger.exception(e)
         return False    # HINT: mis-matched
 
@@ -81,8 +78,7 @@ class ValueObject(object):
         return str(self.value)
 
     def __repr__(self):
-        return "<%s: value=%s, compare=%s>" % \
-               (self.__class__.__name__, self.value, self.compare)
+        return f"<{self.__class__.__name__}: value={self.value}, compare={self.compare}>"
 
 
 class NumberValueObject(ValueObject):
@@ -123,7 +119,7 @@ class BoolValueObject(ValueObject):
             elif text in cls.FALSE_STRINGS:
                 return False
             else:
-                raise ValueError("NON-BOOL: %s" % value)
+                raise ValueError(f"NON-BOOL: {value}")
         # -- OTHERWISE:
         return bool(value)
 
@@ -278,7 +274,7 @@ class ActiveTagMatcher(TagMatcher):
         if value_sep is None:
             value_sep = cls.value_separator
         value = value or ""
-        return "%s.with_%s%s%s" % (tag_prefix, category, value_sep, value)
+        return f"{tag_prefix}.with_{category}{value_sep}{value}"
 
     def is_tag_negated(self, tag):      # pylint: disable=no-self-use
         return tag.startswith("not")
@@ -365,8 +361,7 @@ class ActiveTagMatcher(TagMatcher):
         tag_expression2 = any(negative_tags_matched)    #< LOGICAL-OR expression
         if not positive_tags_matched:
             tag_expression1 = True
-        tag_group_enabled = bool(tag_expression1 and not tag_expression2)
-        return tag_group_enabled
+        return tag_expression1 and not tag_expression2
 
     def should_exclude_with(self, tags):
         group_categories = self.group_active_tags_by_category(tags)
@@ -375,7 +370,7 @@ class ActiveTagMatcher(TagMatcher):
                 # -- LOGICAL-AND SHORTCUT: Any false => Makes everything false
                 if self.use_exclude_reason:
                     current_value = self.value_provider.get(group_category, None)
-                    reason = "%s (but: %s)" % (group_category, current_value)
+                    reason = f"{group_category} (but: {current_value})"
                     self.exclude_reason = reason
                 return True     # SHOULD-EXCLUDE: not enabled = not False
         # -- LOGICAL-AND: All parts are True
@@ -388,8 +383,7 @@ class ActiveTagMatcher(TagMatcher):
         :return: List of (tag, match_object) pairs (as generator).
         """
         for tag in tags:
-            match_object = self.tag_pattern.match(tag)
-            if match_object:
+            if match_object := self.tag_pattern.match(tag):
                 yield (tag, match_object)
 
     def group_active_tags_by_category(self, tags):
@@ -403,16 +397,14 @@ class ActiveTagMatcher(TagMatcher):
         """
         category_tag_groups = {}
         for tag in tags:
-            match_object = self.tag_pattern.match(tag)
-            if match_object:
+            if match_object := self.tag_pattern.match(tag):
                 category = match_object.group("category")
                 category_tag_pairs = category_tag_groups.get(category, None)
                 if category_tag_pairs is None:
                     category_tag_pairs = category_tag_groups[category] = []
                 category_tag_pairs.append((tag, match_object))
 
-        for category, category_tag_pairs in six.iteritems(category_tag_groups):
-            yield (category, category_tag_pairs)
+        yield from six.iteritems(category_tag_groups)
 
 
 class PredicateTagMatcher(TagMatcher):
@@ -433,11 +425,10 @@ class CompositeTagMatcher(TagMatcher):
         self.tag_matchers = tag_matchers or []
 
     def should_exclude_with(self, tags):
-        for tag_matcher in self.tag_matchers:
-            if tag_matcher.should_exclude_with(tags):
-                return True
-        # -- OTHERWISE:
-        return False
+        return any(
+            tag_matcher.should_exclude_with(tags)
+            for tag_matcher in self.tag_matchers
+        )
 
 
 # -----------------------------------------------------------------------------
@@ -508,9 +499,9 @@ class CompositeActiveTagValueProvider(ActiveTagValueProvider):
                 # -- FOUND CATEGORY:
                 self.data[category] = value
                 break
-            # -- FOUND-CATEGORY or NOT-FOUND:
-            if value is Unknown:
-                value = default
+        # -- FOUND-CATEGORY or NOT-FOUND:
+        if value is Unknown:
+            value = default
 
         return self.use_value(value)
 
@@ -518,16 +509,14 @@ class CompositeActiveTagValueProvider(ActiveTagValueProvider):
     def keys(self):
         for value_provider in self.value_providers:
             try:
-                for category in value_provider.keys():
-                    yield category
+                yield from value_provider.keys()
             except AttributeError:
                 # -- keys() method not supported.
                 pass
 
     def values(self):
         for category in self.keys():
-            value = self.get(category)
-            yield value
+            yield self.get(category)
 
     def items(self):
         for category in self.keys():

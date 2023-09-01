@@ -75,7 +75,7 @@ class TagExpressionProtocol(Enum):
         if isinstance(member, six.string_types):
             name = member
             member = cls.parse(name)
-        assert isinstance(member, TagExpressionProtocol), "%s:%s" % (type(member), member)
+        assert isinstance(member, TagExpressionProtocol), f"{type(member)}:{member}"
         setattr(cls, "_current", member)
 
 
@@ -159,8 +159,9 @@ def select_tag_expression_parser4any(text_or_seq):
     text = text.replace("(", " ( ").replace(")", " ) ")
     words = text.split()
     contains_v1_keywords = any((k in text) for k in TAG_EXPRESSION_V1_KEYWORDS)
-    contains_v2_keywords = is_any_equal_to_keyword(words, TAG_EXPRESSION_V2_KEYWORDS)
-    if contains_v2_keywords:
+    if contains_v2_keywords := is_any_equal_to_keyword(
+        words, TAG_EXPRESSION_V2_KEYWORDS
+    ):
         # -- USE: Use cucumber-tag-expressions
         return parse_tag_expression_v2
     elif contains_v1_keywords or len(words) > 1:

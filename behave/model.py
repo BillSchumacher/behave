@@ -215,21 +215,21 @@ class ScenarioContainer(TagAndStatusStatement, Replayable):
         passed_count = 0
         for run_item in self.run_items:
             run_item_status = run_item.status
-            if run_item_status == Status.failed:
-                return Status.failed
+            if (
+                run_item_status != Status.failed
+                and run_item_status == Status.untested
+                and passed_count > 0
+                or run_item_status == Status.failed
+            ):
+                return Status.failed  # ABORTED: Some passed, now untested.
             elif run_item_status == Status.untested:
-                if passed_count > 0:
-                    return Status.failed  # ABORTED: Some passed, now untested.
                 return Status.untested
             if run_item_status != Status.skipped:
                 skipped = False
             if run_item_status == Status.passed:
                 passed_count += 1
 
-        if skipped:
-            return Status.skipped
-        # -- OTHERWISE:
-        return Status.passed
+        return Status.skipped if skipped else Status.passed
 
     @property
     def duration(self):
@@ -313,11 +313,10 @@ class ScenarioContainer(TagAndStatusStatement, Replayable):
         if tag_expression.check(self.effective_tags):
             return True
 
-        for run_item in self.run_items:
-            if run_item.should_run_with_tags(tag_expression):
-                return True
-        # -- OTHERWISE: Should NOT run
-        return False
+        return any(
+            run_item.should_run_with_tags(tag_expression)
+            for run_item in self.run_items
+        )
 
     def mark_skipped(self):
         """Marks this feature (and all its scenarios and steps) as skipped.
@@ -390,8 +389,7 @@ class ScenarioContainer(TagAndStatusStatement, Replayable):
         # run this entity if the tags say so or any one of its scenarios
         if should_run_entity or runner.config.show_skipped:
             for formatter in runner.formatters:
-                formatter_callback = getattr(formatter, entity_name, None)
-                if formatter_callback:
+                if formatter_callback := getattr(formatter, entity_name, None):
                     formatter_callback(self)
             if self.background:
                 for formatter in runner.formatters:
@@ -402,7 +400,7 @@ class ScenarioContainer(TagAndStatusStatement, Replayable):
             for run_item in self.run_items:
                 # -- OPTIONAL: Select scenario by name (regular expressions).
                 should_run_with_name = \
-                    getattr(run_item, "should_run_with_name_select", None)
+                        getattr(run_item, "should_run_with_name_select", None)
                 if (runner.config.name and should_run_with_name and
                         not should_run_with_name(runner.config)):
                     run_item.mark_skipped()
@@ -441,8 +439,7 @@ class ScenarioContainer(TagAndStatusStatement, Replayable):
                 callback_name = "eof"
 
             for formatter in runner.formatters:
-                formatter_callback = getattr(formatter, callback_name, None)
-                if formatter_callback:
+                if formatter_callback := getattr(formatter, callback_name, None):
                     formatter_callback()
 
         self.run_endtime = time.time()
@@ -830,13 +827,10 @@ class Background(BasicStatement, Replayable):
 
     @property
     def duration(self):
-        duration = 0
-        for step in self.steps:
-            duration += step.duration
-        return duration
+        return sum(step.duration for step in self.steps)
 
     def __repr__(self):
-        return '<Background "%s">' % self.name
+        return f'<Background "{self.name}">'
 
     def __iter__(self):
         return self.iter_steps()
@@ -1007,7 +1001,7 @@ class Scenario(TagAndStatusStatement, Replayable):
         return self.iter_steps()
 
     def __repr__(self):
-        return '<Scenario "%s">' % self.name
+        return f'<Scenario "{self.name}">'
 
     def __iter__(self):
         return self.iter_steps()
@@ -1023,12 +1017,7 @@ class Scenario(TagAndStatusStatement, Replayable):
 
         for step in self.all_steps:
             if step.status == Status.undefined:
-                if self.was_dry_run:
-                    # -- SPECIAL CASE: In dry-run with undefined-step discovery
-                    #    Undefined steps should not cause failed scenario.
-                    return Status.untested
-                # -- NORMALLY: Undefined steps cause failed scenario.
-                return Status.failed
+                return Status.untested if self.was_dry_run else Status.failed
             elif step.status != Status.passed:
                 # pylint: disable=line-too-long
                 assert step.status in (Status.failed, Status.skipped, Status.untested)
@@ -1037,11 +1026,7 @@ class Scenario(TagAndStatusStatement, Replayable):
 
     @property
     def duration(self):
-        # -- ORIG: for step in self.steps:  Background steps were excluded.
-        scenario_duration = 0
-        for step in self.all_steps:
-            scenario_duration += step.duration
-        return scenario_duration
+        return sum(step.duration for step in self.all_steps)
 
     def should_run(self, config=None):
         """Determines if this Scenario (or ScenarioOutline) should run.
@@ -1075,8 +1060,9 @@ class Scenario(TagAndStatusStatement, Replayable):
         Note that this method can be called before the scenario is executed.
         """
         self.skip(require_not_executed=True)
-        assert self.status == Status.skipped or self.hook_failed, \
-               "OOPS: scenario.status=%s" % self.status.name
+        assert (
+            self.status == Status.skipped or self.hook_failed
+        ), f"OOPS: scenario.status={self.status.name}"
 
     def skip(self, reason=None, require_not_executed=False):
         """Skip from executing this scenario or the remaining parts of it.
@@ -1098,8 +1084,9 @@ class Scenario(TagAndStatusStatement, Replayable):
             if not_executed:
                 step.status = Status.skipped
             else:
-                assert not require_not_executed, \
-                    "REQUIRE NOT-EXECUTED, but step is %s" % step.status
+                assert (
+                    not require_not_executed
+                ), f"REQUIRE NOT-EXECUTED, but step is {step.status}"
 
         scenario_without_steps = not self.steps and not self.background_steps
         if scenario_without_steps:
@@ -1241,7 +1228,7 @@ class ScenarioOutlineBuilder(object):
         :param params:  As additional placeholder provider (as dict).
         :return: Rendered text, known placeholders are substituted w/ values.
         """
-        if not ("<" in text and ">" in text):
+        if "<" not in text or ">" not in text:
             return text
 
         safe_values = False
@@ -1251,7 +1238,7 @@ class ScenarioOutlineBuilder(object):
             for name, value in placeholders.items():
                 if safe_values and ("<" in value and ">" in value):
                     continue    # -- OOPS, value looks like placeholder.
-                placeholder = u"<%s>" % name
+                placeholder = f"<{name}>"
                 text = text.replace(placeholder, value)
         return text
 
@@ -1319,7 +1306,7 @@ class ScenarioOutlineBuilder(object):
             new_step.text = cls.render_template(new_step.text, row)
         if new_step.table:
             for name, value in row.items():
-                placeholder = u"<%s>" % name
+                placeholder = f"<{name}>"
                 for i, cell in enumerate(new_step.table.headings):
                     new_step.table.headings[i] = cell.replace(placeholder, value)
                 for step_row in new_step.table:
@@ -1492,8 +1479,11 @@ class ScenarioOutline(Scenario):
         """
         # -- SPECIAL CASE: ScenarioOutline/ScenarioTemplate
         # Filter out "abstract tags" (parametrized tags) used in this template.
-        tags = set([tag for tag in self.tags
-                    if not ScenarioOutlineBuilder.is_parametrized_tag(tag)])
+        tags = {
+            tag
+            for tag in self.tags
+            if not ScenarioOutlineBuilder.is_parametrized_tag(tag)
+        }
         if self.parent:
             # -- INHERIT TAGS: From parent(s), recursively
             inherited_tags = self.parent.effective_tags
@@ -1501,7 +1491,7 @@ class ScenarioOutline(Scenario):
         return tags
 
     def __repr__(self):
-        return '<ScenarioOutline "%s">' % self.name
+        return f'<ScenarioOutline "{self.name}">'
 
     def __iter__(self):
         return iter(self.scenarios) # -- REQUIRE: BUILD-SCENARIOS
@@ -1522,10 +1512,7 @@ class ScenarioOutline(Scenario):
 
     @property
     def duration(self):
-        outline_duration = 0
-        for scenario in self._scenarios:    # -- AVOID: BUILD-SCENARIOS
-            outline_duration += scenario.duration
-        return outline_duration
+        return sum(scenario.duration for scenario in self._scenarios)
 
     def should_run_with_tags(self, tag_expression):
         """Determines if this scenario outline (or one of its scenarios)
@@ -1537,11 +1524,10 @@ class ScenarioOutline(Scenario):
         if tag_expression.check(self.effective_tags):
             return True
 
-        for scenario in self.scenarios:     # -- REQUIRE: BUILD-SCENARIOS
-            if scenario.should_run_with_tags(tag_expression):
-                return True
-        # -- NOTHING SELECTED:
-        return False
+        return any(
+            scenario.should_run_with_tags(tag_expression)
+            for scenario in self.scenarios
+        )
 
     def should_run_with_name_select(self, config):
         """Determines if this scenario should run when it is selected by name.
@@ -1552,11 +1538,10 @@ class ScenarioOutline(Scenario):
         if not config.name:
             return True # -- SELECT-ALL: Select by name is not specified.
 
-        for scenario in self.scenarios:     # -- REQUIRE: BUILD-SCENARIOS
-            if scenario.should_run_with_name_select(config):
-                return True
-        # -- NOTHING SELECTED:
-        return False
+        return any(
+            scenario.should_run_with_name_select(config)
+            for scenario in self.scenarios
+        )
 
 
     def mark_skipped(self):
@@ -1742,7 +1727,7 @@ class Step(BasicStatement, Replayable):
         # -- POSTCONDITION: assert self.status == Status.untested
 
     def __repr__(self):
-        return '<%s "%s">' % (self.step_type, self.name)
+        return f'<{self.step_type} "{self.name}">'
 
     def __eq__(self, other):
         return (self.step_type, self.name) == (other.step_type, other.name)
@@ -1796,11 +1781,8 @@ class Step(BasicStatement, Replayable):
         if capture:
             runner.start_capture()
 
-        skip_step_untested = False
         runner.run_hook("before_step", runner.context, self)
-        if self.hook_failed:
-            skip_step_untested = True
-
+        skip_step_untested = bool(self.hook_failed)
         start = time.time()
         if not skip_step_untested:
             try:
@@ -1823,7 +1805,7 @@ class Step(BasicStatement, Replayable):
                 self.store_exception_context(e)
                 if e.args:
                     message = _text(e)
-                    error = u"Assertion Failed: "+ message
+                    error = f"Assertion Failed: {message}"
                 else:
                     # no assertion text; format the exception
                     error = _text(traceback.format_exc())
@@ -1848,8 +1830,7 @@ class Step(BasicStatement, Replayable):
             if capture:
                 # -- CAPTURE-ONLY: Non-nested step failures.
                 self.captured = runner.capture_controller.captured
-                error2 = self.captured.make_report()
-                if error2:
+                if error2 := self.captured.make_report():
                     error += "\n" + error2
             self.error_message = error
             keep_going = False
@@ -1941,7 +1922,7 @@ class Table(Replayable):
             try:
                 column_index = self.get_column_index(column_name)
             except ValueError:
-                raise KeyError("column=%s is unknown" % column_name)
+                raise KeyError(f"column={column_name} is unknown")
 
         assert isinstance(column_index, int)
         assert column_index < len(self.headings)
@@ -1969,7 +1950,7 @@ class Table(Replayable):
         """
         if not self.has_column(column_name):
             columns = ", ".join(self.headings)
-            msg = "REQUIRE COLUMN: %s (columns: %s)" % (column_name, columns)
+            msg = f"REQUIRE COLUMN: {column_name} (columns: {columns})"
             raise AssertionError(msg)
         return self.get_column_index(column_name)
 
@@ -2078,7 +2059,7 @@ class Row(object):
             if isinstance(name, int):
                 index = name
             else:
-                raise KeyError('"%s" is not a row heading' % name)
+                raise KeyError(f'"{name}" is not a row heading')
         return self.cells[index]
 
     def __repr__(self):
@@ -2168,12 +2149,10 @@ class Tag(six.text_type):
                 chars.append(char)
             elif char.isspace():
                 chars.append(u"_")
-            elif char in cls.quoting_chars:
-                pass    # -- NORMALIZE: Remove any quoting chars.
-            # -- MAYBE:
-            # else:
-            #     # -- OTHERWISE: Accept gracefully any other character.
-            #     chars.append(char)
+                # -- MAYBE:
+                # else:
+                #     # -- OTHERWISE: Accept gracefully any other character.
+                #     chars.append(char)
         return u"".join(chars)
 
 
@@ -2214,11 +2193,7 @@ class Text(six.text_type):
         if self == expected:
             return True
 
-        # -- DETAILED HINTS: Why comparison failed.
-        diff = []
-        for line in difflib.unified_diff(self.splitlines(),
-                                         expected.splitlines()):
-            diff.append(line)
+        diff = list(difflib.unified_diff(self.splitlines(), expected.splitlines()))
         if not diff:
             # -- MAYBE: Only differences in line-endings => GRACEFULLY ACCEPT as OK.
             return True

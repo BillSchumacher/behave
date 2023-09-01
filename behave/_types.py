@@ -58,8 +58,7 @@ class ExceptionUtil(object):
         text = u"{prefix}{0}: {1}\n".format(exception.__class__.__name__,
                                             exception, prefix=prefix)
         if use_traceback:
-            exc_traceback = cls.get_traceback(exception)
-            if exc_traceback:
+            if exc_traceback := cls.get_traceback(exception):
                 # -- NOTE: Chained-exception cause (see: PEP-3134).
                 text += u"".join(traceback.format_tb(exc_traceback))
         return text

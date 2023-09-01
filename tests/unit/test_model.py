@@ -18,12 +18,7 @@ from behave.configuration import Configuration
 from behave.compat.collections import OrderedDict
 from behave import step_registry
 
-if six.PY2:
-    # pylint: disable=unused-import
-    traceback_modname = "traceback2"
-else:
-    # pylint: disable=unused-import
-    traceback_modname = "traceback"
+traceback_modname = "traceback2" if six.PY2 else "traceback"
 
 
 class TestFeatureRun(unittest.TestCase):
@@ -461,7 +456,7 @@ class TestStepRun(unittest.TestCase):
         self.config = self.runner.config = Mock()
         self.config.outputs = [None]
         self.context = self.runner.context = Mock()
-        print("context is %s" % self.context)
+        print(f"context is {self.context}")
         self.formatters = self.runner.formatters = [Mock()]
         self.stdout_capture = self.capture_controller.stdout_capture = Mock()
         self.stdout_capture.getvalue.return_value = ''
@@ -595,7 +590,7 @@ class TestStepRun(unittest.TestCase):
         assert step.status == Status.failed
         assert step.error_message.startswith("Assertion Failed")
 
-    @patch("%s.format_exc" % traceback_modname)
+    @patch(f"{traceback_modname}.format_exc")
     def test_run_sets_status_to_failed_on_exception(self, format_exc):
         step = Step("foo.feature", 17, u"Given", "given", u"foo")
         step.error_message = None

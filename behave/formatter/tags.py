@@ -101,16 +101,17 @@ class TagsFormatter(AbstractTagsFormatter):
         if len(details) == 1:
             parts.append(list(details.keys())[0])
         else:
-            for category in sorted(details):
-                text = u"%s: %d" % (category, details[category])
-                parts.append(text)
+            parts.extend(
+                u"%s: %d" % (category, details[category])
+                for category in sorted(details)
+            )
         return ", ".join(parts)
 
     def report_tag_counts(self):
         # -- PREPARE REPORT:
         ordered_tags = sorted(list(self.tag_counts.keys()))
         tag_maxsize = compute_words_maxsize(ordered_tags)
-        schema = "  @%-" + _text(tag_maxsize) + "s %4d    (used for %s)\n"
+        schema = f"  @%-{_text(tag_maxsize)}" + "s %4d    (used for %s)\n"
 
         # -- EMIT REPORT:
         self.stream.write("TAG COUNTS (alphabetically sorted):\n")
@@ -127,7 +128,7 @@ class TagsFormatter(AbstractTagsFormatter):
         ordered_tags = sorted(list(self.tag_counts.keys()),
                               key=compare_tag_counts_size)
         tag_maxsize = compute_words_maxsize(ordered_tags)
-        schema = "  @%-" + _text(tag_maxsize) + "s %4d    (used for %s)\n"
+        schema = f"  @%-{_text(tag_maxsize)}" + "s %4d    (used for %s)\n"
 
         # -- EMIT REPORT:
         self.stream.write("TAG COUNTS (most often used first):\n")
@@ -165,14 +166,14 @@ class TagsLocationFormatter(AbstractTagsFormatter):
         for tag_elements in self.tag_counts.values():
             locations.update([six.text_type(x.location) for x in tag_elements])
         location_column_size = compute_words_maxsize(locations)
-        schema = u"    %-" + _text(location_column_size) + "s   %s\n"
+        schema = f"    %-{_text(location_column_size)}" + "s   %s\n"
 
         # -- EMIT REPORT:
         self.stream.write("TAG LOCATIONS (alphabetically ordered):\n")
         for tag in sorted(self.tag_counts):
             self.stream.write("  @%s:\n" % tag)
             for element in self.tag_counts[tag]:
-                info = u"%s: %s" % (element.keyword, element.name)
+                info = f"{element.keyword}: {element.name}"
                 self.stream.write(schema % (element.location, info))
             self.stream.write("\n")
         self.stream.write("\n")

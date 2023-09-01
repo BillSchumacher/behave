@@ -82,20 +82,19 @@ def ensure_workdir_not_exists(context):
                                           dir=os.path.dirname(real_dirname) or ".")
             os.rename(real_dirname, renamed_dirname)
             real_dirname = renamed_dirname
-        max_iterations = 2
-        if sys.platform.startswith("win"):
-            max_iterations = 15
-
+        max_iterations = 15 if sys.platform.startswith("win") else 2
         for iteration in range(max_iterations):
             if not os.path.exists(real_dirname):
                 if iteration > 1:
-                    print("REMOVE-WORKDIR after %s iterations" % (iteration+1))
+                    print(f"REMOVE-WORKDIR after {iteration + 1} iterations")
                 break
             shutil.rmtree(real_dirname, ignore_errors=True)
             time.sleep(0.5)
-        assert not os.path.isdir(real_dirname), "ENSURE not-isa dir: %s" % real_dirname
-        assert not os.path.exists(real_dirname), "ENSURE dir not-exists: %s" % real_dirname
-        assert not os.path.isdir(orig_dirname), "ENSURE not-isa dir: %s" % orig_dirname
+        assert not os.path.isdir(real_dirname), f"ENSURE not-isa dir: {real_dirname}"
+        assert not os.path.exists(
+            real_dirname
+        ), f"ENSURE dir not-exists: {real_dirname}"
+        assert not os.path.isdir(orig_dirname), f"ENSURE not-isa dir: {orig_dirname}"
 
 
 # def create_textfile_with_contents(filename, contents):

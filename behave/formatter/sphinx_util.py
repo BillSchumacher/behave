@@ -104,7 +104,7 @@ class DocumentWriter(object):
             column_size = compute_words_maxsize(column)
             cols_size.append(column_size)
             separator_parts.append("=" * column_size)
-            row_schema_parts.append("%-" + _text(column_size) + "s")
+            row_schema_parts.append(f"%-{_text(column_size)}s")
 
         separator = " ".join(separator_parts) + "\n"
         row_schema = " ".join(row_schema_parts) + "\n"

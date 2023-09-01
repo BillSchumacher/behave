@@ -61,7 +61,7 @@ class TestTagInheritance4Feature(object):
         (["feature_tag1", "feature_tag2"], "with tags"),
     ])
     def test_no_inherited_tags(self, tags, case):
-        tag_line = " ".join("@%s" % tag for tag in tags)
+        tag_line = " ".join(f"@{tag}" for tag in tags)
         text = u"""
             {tag_line}
             Feature: F1

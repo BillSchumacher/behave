@@ -28,9 +28,7 @@ if has_combinations:
         """
         Convert into tags-line as in feature file.
         """
-        if tags:
-            return "@" + " @".join(tags)
-        return NO_TAGS
+        return "@" + " @".join(tags) if tags else NO_TAGS
 
 
     TestCase = object

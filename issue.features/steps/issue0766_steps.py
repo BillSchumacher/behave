@@ -9,4 +9,4 @@ def step_with_table_data(ctx):
 
 @given(u'a step with name="{name}"')
 def step_with_table_data(ctx, name):
-    print(u"name: {}".format(name))
+    print(f"name: {name}")

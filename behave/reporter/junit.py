@@ -112,11 +112,12 @@ def _compile_invalid_re():
     ]
 
     illegal_ranges = [
-        "%s-%s" % (unichr(low), unichr(high))
+        f"{unichr(low)}-{unichr(high)}"
         for (low, high) in illegal_unichrs
-        if low < sys.maxunicode]
+        if low < sys.maxunicode
+    ]
 
-    return re.compile(u'[%s]' % u''.join(illegal_ranges))
+    return re.compile(f"[{''.join(illegal_ranges)}]")
 
 
 _invalid_re = _compile_invalid_re()
@@ -244,11 +245,14 @@ class JUnitReporter(Reporter):
                                               self.show_skipped_always)
 
     def make_feature_filename(self, feature):
-        filename = None
-        for path in self.config.paths:
-            if feature.filename.startswith(path):
-                filename = feature.filename[len(path) + 1:]
-                break
+        filename = next(
+            (
+                feature.filename[len(path) + 1 :]
+                for path in self.config.paths
+                if feature.filename.startswith(path)
+            ),
+            None,
+        )
         if not filename:
             # -- NOTE: Directory path (subdirs) are taken into account.
             filename = feature.location.relpath(self.config.base_dir)
@@ -273,7 +277,7 @@ class JUnitReporter(Reporter):
 
         suite = ElementTree.Element(u'testsuite')
         feature_name = feature.name or feature_filename
-        suite.set(u'name', u'%s.%s' % (classname, feature_name))
+        suite.set(u'name', f'{classname}.{feature_name}')
 
         # -- BUILD-TESTCASES: From run_items (and scenarios)
         self._process_run_items_for(feature, report)
@@ -299,7 +303,7 @@ class JUnitReporter(Reporter):
 
         tree = ElementTreeWithCDATA(suite)
         report_dirname = self.config.junit_directory
-        report_basename = u'TESTS-%s.xml' % feature_filename
+        report_basename = f'TESTS-{feature_filename}.xml'
         report_filename = os.path.join(report_dirname, report_basename)
         tree.write(codecs.open(report_filename, "wb"), "UTF-8")
 
@@ -328,8 +332,9 @@ class JUnitReporter(Reporter):
             status: Use enum value instead of string (or string).
         """
         for step in steps:
-            assert isinstance(step, Step), \
-                "TYPE-MISMATCH: step.class=%s"  % step.__class__.__name__
+            assert isinstance(
+                step, Step
+            ), f"TYPE-MISMATCH: step.class={step.__class__.__name__}"
             if step.status == status:
                 return step
         # -- OTHERWISE: No step with the given status found.
@@ -341,7 +346,7 @@ class JUnitReporter(Reporter):
         status_text = _text(step.status.name)
         if self.show_timings:
             status_text += u" in %0.3fs" % step.duration
-        text = u'%s %s ... ' % (step.keyword, step.name)
+        text = f'{step.keyword} {step.name} ... '
         text += u'%s\n' % status_text
         if self.show_multiline:
             prefix = make_indentation(2)
@@ -353,10 +358,7 @@ class JUnitReporter(Reporter):
 
     @classmethod
     def describe_tags(cls, tags):
-        text = u''
-        if tags:
-            text = u'@'+ u' @'.join(tags)
-        return text
+        return u'@'+ u' @'.join(tags) if tags else u''
 
     def describe_scenario(self, scenario):
         """Describe the scenario and the test status.
@@ -370,9 +372,7 @@ class JUnitReporter(Reporter):
             header_line += u'\n  %s\n' % self.describe_tags(scenario.tags)
         header_line += u'  %s: %s\n' % (scenario.keyword, scenario.name)
         footer_line = u'\n@scenario.end\n' + u'-' * 80 + '\n'
-        text = u''
-        for step in scenario:
-            text += self.describe_step(step)
+        text = u''.join(self.describe_step(step) for step in scenario)
         step_indentation = make_indentation(4)
         return header_line + indent(text, step_indentation) + footer_line
 
@@ -408,7 +408,7 @@ class JUnitReporter(Reporter):
             feature_name = self.make_feature_filename(feature)
 
         case = ElementTree.Element('testcase')
-        case.set(u"classname", u"%s.%s" % (classname, feature_name))
+        case.set(u"classname", f"{classname}.{feature_name}")
         case.set(u"name", scenario.name or "")
         case.set(u"status", scenario.status.name)
         case.set(u"time", _text(round(scenario.duration, 6)))
@@ -435,7 +435,7 @@ class JUnitReporter(Reporter):
             if step:
                 step_text = self.describe_step(step).rstrip()
                 text = u"\nFailing step: %s\nLocation: %s\n" % \
-                       (step_text, step.location)
+                           (step_text, step.location)
                 message = _text(step.exception).strip()
                 failure.set(u'type', step.exception.__class__.__name__)
                 failure.set(u'message', message)
@@ -455,11 +455,10 @@ class JUnitReporter(Reporter):
         elif (scenario.status in (Status.skipped, Status.untested)
               and self.show_skipped):
             report.counts_skipped += 1
-            step = self.select_step_with_status(Status.undefined, scenario)
-            if step:
+            if step := self.select_step_with_status(Status.undefined, scenario):
                 # -- UNDEFINED-STEP:
                 report.counts_failed += 1
-                message = u"Undefined Step: %s" % step.name.strip()
+                message = f"Undefined Step: {step.name.strip()}"
                 failure = ElementTree.Element(u"failure")
                 failure.set(u"type", u"undefined")
                 failure.set(u"message", message)

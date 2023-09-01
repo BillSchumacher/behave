@@ -70,12 +70,10 @@ def register_as(name, formatter_class):
     """
     if not isinstance(name, six.string_types):
         # -- REORDER-PARAMS: Used old ordering before behave-1.2.5 (2015).
-        warnings.warn("Use parameter ordering: name, formatter_class (for: %s)"\
-                      % formatter_class)
-        _formatter_class = name
-        name = formatter_class
-        formatter_class = _formatter_class
-
+        warnings.warn(
+            f"Use parameter ordering: name, formatter_class (for: {formatter_class})"
+        )
+        name, formatter_class = formatter_class, name
     if isinstance(formatter_class, six.string_types):
         # -- SPEEDUP-STARTUP: Only import formatter_class when used.
         scoped_formatter_class_name = formatter_class
@@ -107,7 +105,7 @@ def load_formatter_class(scoped_class_name):
     :raises: ImportError, if module cannot be loaded or class is not in module.
     """
     if ":" not in scoped_class_name:
-        message = 'REQUIRE: "module:class", but was: "%s"' % scoped_class_name
+        message = f'REQUIRE: "module:class", but was: "{scoped_class_name}"'
         raise ValueError(message)
     module_name, class_name = parse_scoped_name(scoped_class_name)
     formatter_module = load_module(module_name)
@@ -133,20 +131,16 @@ def select_formatter_class(formatter_name):
     :raises: ValueError, if formatter name is invalid.
     """
     try:
-        formatter_class = _formatter_registry[formatter_name]
-        return formatter_class
-        # if not is_formatter_class_valid(formatter_class):
-        #     formatter_class = BadFormatterClass(formatter_name, formatter_class)
-        #     _formatter_registry[formatter_name] = formatter_class
-        # return formatter_class
+        return _formatter_registry[formatter_name]
+            # if not is_formatter_class_valid(formatter_class):
+            #     formatter_class = BadFormatterClass(formatter_name, formatter_class)
+            #     _formatter_registry[formatter_name] = formatter_class
+            # return formatter_class
     except KeyError:
         # -- NOT-FOUND:
         if ":" not in formatter_name:
             raise
-        # -- OTHERWISE: SCOPED-NAME, try to load a user-specific formatter.
-        # MAY RAISE: ImportError
-        formatter_class = load_formatter_class(formatter_name)
-        return formatter_class
+        return load_formatter_class(formatter_name)
 
 
 def is_formatter_class_valid(formatter_class):

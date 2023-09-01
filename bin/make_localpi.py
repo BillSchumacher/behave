@@ -71,8 +71,7 @@ class Package(object):
 
     @property
     def versions(self):
-        versions_info = [ self.get_pkgversion(p) for p in self.files ]
-        return versions_info
+        return [ self.get_pkgversion(p) for p in self.files ]
 
     @classmethod
     def split_pkgname_parts(cls, filename):
@@ -97,7 +96,7 @@ class Package(object):
             version = parts[version_part_index]
             if version_part_index+1 < len(parts):
                 remainder = "-".join(parts[version_part_index+1:])
-        assert name, "OOPS: basename=%s, name='%s'" % (basename, name)
+        assert name, f"OOPS: basename={basename}, name='{name}'"
         return (name, version, remainder)
 
 
@@ -113,7 +112,7 @@ class Package(object):
     def make_pkgname_with_version(cls, filename):
         pkg_name = cls.get_pkgname(filename)
         pkg_version = cls.get_pkgversion(filename)
-        return "%s-%s" % (pkg_name, pkg_version)
+        return f"{pkg_name}-{pkg_version}"
 
     @staticmethod
     def splitext(filename):
@@ -127,10 +126,7 @@ class Package(object):
         basename = os.path.basename(filename)
         if basename.startswith("."):
             return False
-        for pattern in cls.PATTERNS:
-            if fnmatch(filename, pattern):
-                return True
-        return False
+        return any(fnmatch(filename, pattern) for pattern in cls.PATTERNS)
 
 def collect_packages(package_dir, package_map=None):
     if package_map is None:
@@ -141,15 +137,14 @@ def collect_packages(package_dir, package_map=None):
             continue
         pkg_filepath = os.path.join(package_dir, filename)
         package_name = Package.get_pkgname(pkg_filepath)
-        package = package_map.get(package_name, None)
-        if not package:
+        if package := package_map.get(package_name, None):
+            # -- SAME PACKAGE: Collect other variant/version.
+            package.files.append(pkg_filepath)
+        else:
             # -- NEW PACKAGE DETECTED: Store/register package.
             package = Package(pkg_filepath)
             package_map[package.name] = package
             packages.append(package)
-        else:
-            # -- SAME PACKAGE: Collect other variant/version.
-            package.files.append(pkg_filepath)
     return packages
 
 def make_index_for(package, index_dir, verbose=True):
@@ -188,7 +183,7 @@ def make_index_for(package, index_dir, verbose=True):
         parts.append(item_template.format(pkg_name, pkg_relpath_to))
 
     if not parts:
-        print("OOPS: Package %s has no files" % package.name)
+        print(f"OOPS: Package {package.name} has no files")
         return
 
     if verbose:
@@ -248,7 +243,7 @@ def make_package_index(download_dir):
     package_dirs = [download_dir]
     wheelhouse_dir = os.path.join(download_dir, "wheelhouse")
     if os.path.isdir(wheelhouse_dir):
-        print("Using wheelhouse: %s" % wheelhouse_dir)
+        print(f"Using wheelhouse: {wheelhouse_dir}")
         package_dirs.append(wheelhouse_dir)
 
     # -- STEP: Collect all packages.
@@ -273,7 +268,7 @@ def make_package_index(download_dir):
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
     if (len(sys.argv) != 2) or "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
-        print("USAGE: %s DOWNLOAD_DIR" % os.path.basename(sys.argv[0]))
+        print(f"USAGE: {os.path.basename(sys.argv[0])} DOWNLOAD_DIR")
         print(__doc__)
         sys.exit(1)
     make_package_index(sys.argv[1])
