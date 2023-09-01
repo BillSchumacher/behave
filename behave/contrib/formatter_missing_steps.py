@@ -51,7 +51,7 @@ class MissingStepsFormatter(StepsUsageFormatter):
         self.init_from_userdata(config.userdata)
 
     def init_from_userdata(self, userdata):
-        scoped_name = "%s.%s" %(self.scope, "template")
+        scoped_name = f"{self.scope}.template"
         template_text = userdata.get(scoped_name, self.template)
         self.template = template_text
 

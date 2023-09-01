@@ -23,7 +23,6 @@ def step_note_that(context, remark):
         Given that today is "April 1st"
           But note that "April 1st is Fools day (and beware)"
     """
-    log = getattr(context, "log", None)
-    if log:
-        log.info(u"NOTE: %s;" % remark)
+    if log := getattr(context, "log", None):
+        log.info(f"NOTE: {remark};")
 

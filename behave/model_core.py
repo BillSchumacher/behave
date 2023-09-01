@@ -84,7 +84,7 @@ class Status(Enum):
         enum_value = cls.__members__.get(name, None)
         if enum_value is None:
             known_names = ", ".join(cls.__members__.keys())
-            raise LookupError("%s (expected: %s)" % (name, known_names))
+            raise LookupError(f"{name} (expected: {known_names})")
         return enum_value
 
 
@@ -182,8 +182,7 @@ class FileLocation(object):
         elif isinstance(other, six.string_types):
             return self.filename == other
         else:
-            raise TypeError("Cannot compare FileLocation with %s:%s" % \
-                            (type(other), other))
+            raise TypeError(f"Cannot compare FileLocation with {type(other)}:{other}")
 
     def __ne__(self, other):
         # return not self == other    # pylint: disable=unneeded-not
@@ -202,8 +201,7 @@ class FileLocation(object):
         elif isinstance(other, six.string_types):
             return self.filename < other
         else:
-            raise TypeError("Cannot compare FileLocation with %s:%s" % \
-                            (type(other), other))
+            raise TypeError(f"Cannot compare FileLocation with {type(other)}:{other}")
 
     def __le__(self, other):
         # -- SEE ALSO: python2.7, functools.total_ordering
@@ -223,16 +221,13 @@ class FileLocation(object):
         return not self.__lt__(other)
 
     def __repr__(self):
-        return u'<FileLocation: filename="%s", line=%s>' % \
-               (self.filename, self.line)
+        return f'<FileLocation: filename="{self.filename}", line={self.line}>'
 
     def __str__(self):
         filename = self.filename
         if isinstance(filename, six.binary_type):
             filename = _text(filename, "utf-8")
-        if self.line is None:
-            return filename
-        return u"%s:%d" % (filename, self.line)
+        return filename if self.line is None else u"%s:%d" % (filename, self.line)
 
     if six.PY2:
         __unicode__ = __str__

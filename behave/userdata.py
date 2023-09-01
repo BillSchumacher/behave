@@ -162,9 +162,7 @@ class UserDataNamespace(object):
     @staticmethod
     def make_scoped(namespace, name):
         """Creates a scoped-name from its parts."""
-        if not namespace:   # noqa
-            return name
-        return "%s.%s" % (namespace, name)
+        return name if not namespace else f"{namespace}.{name}"
 
     # -- DICT-LIKE:
     def get(self, name, default=None):
@@ -206,14 +204,13 @@ class UserDataNamespace(object):
     def scoped_keys(self):
         if not self.namespace:  # noqa
             return self.data.keys()
-        prefix = "%s." % self.namespace
+        prefix = f"{self.namespace}."
         return [key for key in self.data.keys() if key.startswith(prefix)]
 
     def keys(self):
-        prefix = "%s." % self.namespace
+        prefix = f"{self.namespace}."
         for scoped_name in self.scoped_keys():
-            name = scoped_name.replace(prefix, "", 1)
-            yield name
+            yield scoped_name.replace(prefix, "", 1)
 
     def values(self):
         for scoped_name in self.scoped_keys():

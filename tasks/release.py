@@ -91,8 +91,7 @@ def bump_version(ctx, new_version, version_part=None, dry_run=False):
     version_part = version_part or "minor"
     if dry_run:
         ctx = DryRunContext(ctx)
-    ctx.run("bumpversion --new-version={} {}".format(new_version,
-                                                     version_part))
+    ctx.run(f"bumpversion --new-version={new_version} {version_part}")
 
 
 @task(name="build", aliases=["build_packages"])
@@ -134,14 +133,11 @@ def prepare(ctx, new_version=None, version_part=None, hide=True,
 def upload(ctx, repo=None, dry_run=False, skip_existing=False):
     """Upload release packages to repository (artifact-store)."""
     original_ctx = ctx
-    opts = ""
     if repo is None:
         repo = ctx.project.repo or "pypi"
     if dry_run:
         ctx = DryRunContext(ctx)
-    if skip_existing:
-        opts = "--skip-existing"
-
+    opts = "--skip-existing" if skip_existing else ""
     packages = ensure_packages_exist(original_ctx)
     print_packages(packages)
     # ctx.run("twine upload --repository={repo} dist/*".format(repo=repo))
@@ -171,18 +167,18 @@ def print_packages(packages):
     for package in packages:
         package_size = package.stat().st_size
         package_time = package.stat().st_mtime
-        print("  - %s  (size=%s)" % (package, package_size))
+        print(f"  - {package}  (size={package_size})")
 
 def ensure_packages_exist(ctx, pattern=None, check_only=False):
     if pattern is None:
         project_name = ctx.project.name
         project_prefix = project_name.replace("_", "-").split("-")[0]
-        pattern = "dist/%s*" % project_prefix
+        pattern = f"dist/{project_prefix}*"
 
     packages = list(path_glob(pattern, current_dir="."))
     if not packages:
         if check_only:
-            message = "No artifacts found: pattern=%s" % pattern
+            message = f"No artifacts found: pattern={pattern}"
             raise RuntimeError(message)
         else:
             # -- RECURSIVE-SELF-CALL: Once

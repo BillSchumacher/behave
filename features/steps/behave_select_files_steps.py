@@ -43,11 +43,11 @@ class BasicBehaveRunner(object):
         Emulate behave runners file selection by using include/exclude patterns.
         :return: List of selected feature filenames.
         """
-        selected = []
-        for filename in self.feature_files:
-            if not self.config.exclude(filename):
-                selected.append(six.text_type(filename))
-        return selected
+        return [
+            six.text_type(filename)
+            for filename in self.feature_files
+            if not self.config.exclude(filename)
+        ]
 
 # -----------------------------------------------------------------------------
 # STEP DEFINITIONS:

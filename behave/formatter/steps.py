@@ -81,7 +81,7 @@ class AbstractStepsFormatter(Formatter):
         if not step_type:
             step_type = step_definition.step_type
         assert step_type
-        return u"@%s('%s')" % (step_type, step_definition.pattern)
+        return f"@{step_type}('{step_definition.pattern}')"
 
 
 # -----------------------------------------------------------------------------
@@ -160,7 +160,7 @@ class StepsFormatter(AbstractStepsFormatter):
             else:
                 # step_keyword = step_type.capitalize()
                 keywords = language_keywords[step_type]
-                if keywords[0] == u"* " or keywords[0] == u"*":
+                if keywords[0] in [u"* ", u"*"]:
                     # -- CASE: Skip over generic-step keyword and
                     #    use next keyword (as default) for this step_type.
                     assert len(keywords) > 1
@@ -168,13 +168,11 @@ class StepsFormatter(AbstractStepsFormatter):
                 else:
                     step_keyword = keywords[0]
 
-            steps_text = [u"%s%s" % (step_keyword, step.pattern)
-                          for step in steps]
+            steps_text = [f"{step_keyword}{step.pattern}" for step in steps]
             if self.shows_location:
                 max_size = compute_words_maxsize(steps_text)
-                if max_size < self.min_location_column:
-                    max_size = self.min_location_column
-                schema = u"  %-" + _text(max_size) + "s  # %s\n"
+                max_size = max(max_size, self.min_location_column)
+                schema = f"  %-{_text(max_size)}" + "s  # %s\n"
             else:
                 schema = u"  %s\n"
 
@@ -323,7 +321,7 @@ class StepsCatalogFormatter(StepsDocFormatter):
                 text = u"%5s %s" % (step_type1.title(), step_definition.pattern)
                 desc.append(text)
         else:
-            desc.append(u"%s %s" % (step_type.title(), step_definition.pattern))
+            desc.append(f"{step_type.title()} {step_definition.pattern}")
 
         return '\n'.join(desc)
 
@@ -376,8 +374,7 @@ class StepsUsageFormatter(AbstractStepsFormatter):
         for step_type, values in self.step_registry.steps.items():
             step_definitions.update(values)
         used_step_definitions = set(self.step_usage_database.keys())
-        unused_step_definitions = step_definitions - used_step_definitions
-        return unused_step_definitions
+        return step_definitions - used_step_definitions
 
     def update_usage_database(self, step_definition, step):
         matching_steps = self.step_usage_database.get(step_definition, None)
@@ -389,10 +386,8 @@ class StepsUsageFormatter(AbstractStepsFormatter):
             matching_steps.append(step)
 
     def update_usage_database_for_step(self, step):
-        step_definition = self.step_registry.find_step_definition(step)
-        if step_definition:
+        if step_definition := self.step_registry.find_step_definition(step):
             self.update_usage_database(step_definition, step)
-        # elif step not in self.undefined_steps:
         elif not steps_contain(self.undefined_steps, step):
             # -- AVOID DUPLICATES: From Scenario Outlines
             self.undefined_steps.append(step)
@@ -432,16 +427,13 @@ class StepsUsageFormatter(AbstractStepsFormatter):
 
         for step_definition, steps in step_definition_items:
             stepdef_text = self.describe_step_definition(step_definition)
-            steps_text = [u"  %s %s" % (step.keyword, step.name)
-                          for step in steps]
+            steps_text = [f"  {step.keyword} {step.name}" for step in steps]
             steps_text.append(stepdef_text)
             max_size = compute_words_maxsize(steps_text)
-            if max_size < self.min_location_column:
-                max_size = self.min_location_column
-
-            schema = u"%-" + _text(max_size) + "s  # %s\n"
+            max_size = max(max_size, self.min_location_column)
+            schema = f"%-{_text(max_size)}" + "s  # %s\n"
             self.stream.write(schema % (stepdef_text, step_definition.location))
-            schema = u"%-" + _text(max_size) + "s  # %s\n"
+            schema = f"%-{_text(max_size)}" + "s  # %s\n"
             for step, step_text in zip(steps, steps_text):
                 self.stream.write(schema % (step_text, step.location))
             self.stream.write("\n")
@@ -459,11 +451,9 @@ class StepsUsageFormatter(AbstractStepsFormatter):
                       for step_definition in step_definitions]
 
         max_size = compute_words_maxsize(step_texts)
-        if max_size < self.min_location_column-2:
-            max_size = self.min_location_column-2
-
+        max_size = max(max_size, self.min_location_column-2)
         # -- STEP: Write report.
-        schema = u"  %-" + _text(max_size) + "s  # %s\n"
+        schema = f"  %-{_text(max_size)}" + "s  # %s\n"
         self.stream.write("UNUSED STEP DEFINITIONS[%d]:\n" % len(step_texts))
         for step_definition, step_text in zip(step_definitions, step_texts):
             self.stream.write(schema % (step_text, step_definition.location))
@@ -476,14 +466,11 @@ class StepsUsageFormatter(AbstractStepsFormatter):
         undefined_steps = sorted(self.undefined_steps,
                                  key=attrgetter("location"))
 
-        steps_text = [u"  %s %s" % (step.keyword, step.name)
-                      for step in undefined_steps]
+        steps_text = [f"  {step.keyword} {step.name}" for step in undefined_steps]
         max_size = compute_words_maxsize(steps_text)
-        if max_size < self.min_location_column:
-            max_size = self.min_location_column
-
+        max_size = max(max_size, self.min_location_column)
         self.stream.write("\nUNDEFINED STEPS[%d]:\n" % len(steps_text))
-        schema = u"%-" + _text(max_size) + "s  # %s\n"
+        schema = f"%-{_text(max_size)}" + "s  # %s\n"
         for step, step_text in zip(undefined_steps, steps_text):
             self.stream.write(schema % (step_text, step.location))
 
@@ -491,9 +478,7 @@ class StepsUsageFormatter(AbstractStepsFormatter):
 # UTILITY FUNCTIONS:
 # -----------------------------------------------------------------------------
 def steps_contain(steps, step):
-    for other_step in steps:
-        if step == other_step and step.location == other_step.location:
-            # -- NOTE: Step comparison does not take location into account.
-            return True
-    # -- OTHERWISE: Not contained yet (or step in other location).
-    return False
+    return any(
+        step == other_step and step.location == other_step.location
+        for other_step in steps
+    )

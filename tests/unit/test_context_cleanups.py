@@ -33,7 +33,7 @@ class CleanupFunction(object):
 
     def __call__(self, *args, **kwargs):
         if self.listener:
-            message = "called:%s" % self.name
+            message = f"called:{self.name}"
             self.listener(message)
 
 

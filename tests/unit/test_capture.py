@@ -90,7 +90,7 @@ class TestCaptured(object):
 
     def test_bool_conversion__returns_false_without_captured_output(self):
         captured = Captured()
-        assert bool(captured) == False
+        assert not bool(captured)
 
     @pytest.mark.parametrize("params", [
         dict(stdout="xxx"),
@@ -103,16 +103,8 @@ class TestCaptured(object):
         captured = Captured(**params)
         assert bool(captured)
 
-    @pytest.mark.parametrize("params, expected", [
-        (dict(), ""),
-        (dict(stdout="STDOUT"), "STDOUT"),
-        (dict(stderr="STDERR"), "STDERR"),
-        (dict(log_output="LOG_OUTPUT"), "LOG_OUTPUT"),
-        (dict(stdout="STDOUT", stderr="STDERR"), "STDOUT\nSTDERR"),
-        (dict(stdout="STDOUT", log_output="LOG_OUTPUT"), "STDOUT\nLOG_OUTPUT"),
-        (dict(stdout="STDOUT", stderr="STDERR", log_output="LOG_OUTPUT"),
-         "STDOUT\nSTDERR\nLOG_OUTPUT"),
-    ])
+    @pytest.mark.parametrize("params, expected", [({}, ""), (dict(stdout="STDOUT"), "STDOUT"), (dict(stderr="STDERR"), "STDERR"), (dict(log_output="LOG_OUTPUT"), "LOG_OUTPUT"), (dict(stdout="STDOUT", stderr="STDERR"), "STDOUT\nSTDERR"), (dict(stdout="STDOUT", log_output="LOG_OUTPUT"), "STDOUT\nLOG_OUTPUT"), (dict(stdout="STDOUT", stderr="STDERR", log_output="LOG_OUTPUT"),
+         "STDOUT\nSTDERR\nLOG_OUTPUT")])
     def test_output__contains_concatenated_parts(self, params, expected):
         captured = Captured(**params)
         assert captured.output == expected

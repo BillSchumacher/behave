@@ -50,7 +50,7 @@ class TestStepRegistry(object):
     def test_find_match_with_no_match_returns_none(self):
         registry = step_registry.StepRegistry()
 
-        step_defs = [Mock() for x in range(0, 10)]
+        step_defs = [Mock() for _ in range(0, 10)]
         for mock in step_defs:
             mock.match.return_value = None
 
@@ -65,7 +65,7 @@ class TestStepRegistry(object):
     def test_find_match_with_a_match_returns_match(self):
         registry = step_registry.StepRegistry()
 
-        step_defs = [Mock() for x in range(0, 10)]
+        step_defs = [Mock() for _ in range(0, 10)]
         for mock in step_defs:
             mock.match.return_value = None
         magic_object = object()

@@ -15,9 +15,6 @@ class TestContextManager(object):
         def foo(checkpoints):
             checkpoints.append("foo.setup.begin")
             raise RuntimeError("OOPS")
-            checkpoints.append("foo.setup.done")
-            yield
-            checkpoints.append("foo.cleanup")
 
         checkpoints = []
         with pytest.raises(RuntimeError):
@@ -32,8 +29,6 @@ class TestContextManager(object):
             try:
                 checkpoints.append("foo.setup.begin")
                 raise RuntimeError("OOPS")
-                checkpoints.append("foo.setup.done")
-                yield
             finally:
                 checkpoints.append("foo.cleanup")
 
@@ -50,9 +45,6 @@ class TestGenerator(object):
         def foo(checkpoints):
             checkpoints.append("foo.setup.begin")
             raise RuntimeError("OOPS")
-            checkpoints.append("foo.setup.done")
-            yield
-            checkpoints.append("foo.cleanup")
 
         checkpoints = []
         with pytest.raises(RuntimeError):
@@ -66,8 +58,6 @@ class TestGenerator(object):
             try:
                 checkpoints.append("foo.setup.begin")
                 raise RuntimeError("OOPS")
-                checkpoints.append("foo.setup.done")
-                yield
             finally:
                 checkpoints.append("foo.cleanup")
 

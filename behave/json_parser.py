@@ -36,8 +36,7 @@ def parse(json_filename, encoding="UTF-8"):
     with codecs.open(json_filename, "rU", encoding=encoding) as input_file:
         json_data = json.load(input_file, encoding=encoding)
         json_processor = JsonParser()
-        features = json_processor.parse_features(json_data)
-        return features
+        return json_processor.parse_features(json_data)
 
 
 # ----------------------------------------------------------------------------
@@ -85,11 +84,8 @@ class JsonParser(object):
             scenario_outline = self.parse_scenario_outline(json_element)
             feature.add_scenario(scenario_outline)
             self.current_scenario_outline = scenario_outline
-        # elif category == "examples":
-        #     examples = self.parse_examples(json_element)
-        #     self.current_scenario_outline.examples = examples
         else:
-            raise KeyError("Invalid feature-element keyword: %s" % category)
+            raise KeyError(f"Invalid feature-element keyword: {category}")
 
 
     def parse_background(self, json_element):
@@ -106,8 +102,7 @@ class JsonParser(object):
         json_steps = json_element.get("steps", [])
         steps = self.parse_steps(json_steps)
         filename, line = location.split(":")
-        background = model.Background(filename, line, keyword, name, steps)
-        return background
+        return model.Background(filename, line, keyword, name, steps)
 
     def parse_scenario(self, json_element):
         """
@@ -150,10 +145,7 @@ class JsonParser(object):
         json_steps = json_element.get("steps", [])
         json_examples = json_element.get("examples", [])
         steps = self.parse_steps(json_steps)
-        examples = []
-        if json_examples:
-            # pylint: disable=redefined-variable-type
-            examples = self.parse_examples(json_examples)
+        examples = self.parse_examples(json_examples) if json_examples else []
         filename, line = location.split(":")
         scenario_outline = model.ScenarioOutline(filename, line, keyword, name,
                                                  tags=tags, steps=steps,
@@ -192,15 +184,13 @@ class JsonParser(object):
         if isinstance(text, list):
             text = "\n".join(text)
         table = None
-        json_table = json_element.get("table", None)
-        if json_table:
+        if json_table := json_element.get("table", None):
             table = self.parse_table(json_table)
         filename, line = location.split(":")
         step = model.Step(filename, line, keyword, step_type, name)
         step.text = text
         step.table = table
-        json_result = json_element.get("result", None)
-        if json_result:
+        if json_result := json_element.get("result", None):
             self.add_step_result(step, json_result)
         return step
 
@@ -233,8 +223,7 @@ class JsonParser(object):
         """
         headings = json_table.get("headings", [])
         rows = json_table.get("rows", [])
-        table = model.Table(headings, rows=rows)
-        return table
+        return model.Table(headings, rows=rows)
 
 
     def parse_examples(self, json_element):
@@ -256,9 +245,7 @@ class JsonParser(object):
         location = json_element.get("location", u"")
 
         table = None
-        json_table = json_element.get("table", None)
-        if json_table:
+        if json_table := json_element.get("table", None):
             table = self.parse_table(json_table)
         filename, line = location.split(":")
-        examples = model.Examples(filename, line, keyword, name, table)
-        return examples
+        return model.Examples(filename, line, keyword, name, table)

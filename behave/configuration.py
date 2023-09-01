@@ -12,6 +12,7 @@ This module provides the configuration for :mod:`behave`:
 * command-line parsing and storing params in Configuration object(s)
 """
 
+
 from __future__ import absolute_import, print_function
 import argparse
 from collections import namedtuple
@@ -44,9 +45,7 @@ ConfigParser = configparser.ConfigParser
 if six.PY2:  # pragma: no cover
     ConfigParser = configparser.SafeConfigParser
 
-# -- OPTIONAL TOML SUPPORT: Using "pyproject.toml" as config-file
-_TOML_AVAILABLE = True
-if _TOML_AVAILABLE:  # pragma: no cover
+if _TOML_AVAILABLE := True:
     try:
         if sys.version_info >= (3, 11):
             import tomllib
@@ -88,8 +87,7 @@ class LogLevel(object):
     def parse_type(cls, levelname):
         level = cls.parse(levelname, Unknown)
         if level is Unknown:
-            message = "%s is unknown, use: %s" % \
-                      (levelname, ", ".join(cls.names[1:]))
+            message = f'{levelname} is unknown, use: {", ".join(cls.names[1:])}'
             raise argparse.ArgumentTypeError(message)
         return level
 
@@ -102,7 +100,7 @@ def positive_number(text):
     """Converts a string into a positive integer number."""
     value = int(text)
     if value < 0:
-        raise ValueError("POSITIVE NUMBER, but was: %s" % text)
+        raise ValueError(f"POSITIVE NUMBER, but was: {text}")
     return value
 
 
@@ -422,12 +420,14 @@ With "strict", only tag-expressions v2 are supported (better error diagnostics).
 # -- CONFIG-FILE SKIPS:
 # * Skip SOME_HELP options, like: --tags-help, --lang-list, ...
 # * Skip --no-<name> options (action: "store_false", "store_const")
-CONFIGFILE_EXCLUDED_OPTIONS = set([
-    "tags_help", "lang_list", "lang_help",
+CONFIGFILE_EXCLUDED_OPTIONS = {
+    "tags_help",
+    "lang_list",
+    "lang_help",
     "version",
     "userdata_defines",
-])
-CONFIGFILE_EXCLUDED_ACTIONS = set(["store_false", "store_const"])
+}
+CONFIGFILE_EXCLUDED_ACTIONS = {"store_false", "store_const"}
 
 # -- OPTIONS: With raw value access semantics in configuration file.
 RAW_VALUE_OPTIONS = frozenset([
@@ -450,10 +450,14 @@ def has_negated_option(option_words):
 
 
 def derive_dest_from_long_option(fixed_options):
-    for option_name in fixed_options:
-        if option_name.startswith("--"):
-            return option_name[2:].replace("-", "_")
-    return None
+    return next(
+        (
+            option_name[2:].replace("-", "_")
+            for option_name in fixed_options
+            if option_name.startswith("--")
+        ),
+        None,
+    )
 
 
 ConfigFileOption = namedtuple("ConfigFileOption", ("dest", "action", "type"))
@@ -502,7 +506,7 @@ def format_outfiles_coupling(config_data, config_dir):
         outfiles_size = len(outfiles)
         if outfiles_size < formatter_size:
             for formatter_name in formatters[outfiles_size:]:
-                outfile = "%s.output" % formatter_name
+                outfile = f"{formatter_name}.output"
                 outfiles.append(outfile)
             config_data["outfiles"] = outfiles
         elif len(outfiles) > formatter_size:
@@ -549,7 +553,7 @@ def read_configparser(path):
             value_type = value_type or six.text_type
             this_config[param_name] = [value_type(part.strip()) for part in value_parts]
         elif action not in CONFIGFILE_EXCLUDED_ACTIONS:  # pragma: no cover
-            raise ValueError('action "%s" not implemented' % action)
+            raise ValueError(f'action "{action}" not implemented')
 
     config_dir = os.path.dirname(path)
     format_outfiles_coupling(this_config, config_dir)
@@ -610,7 +614,7 @@ def read_toml_config(path):
                 raise ConfigParamTypeError(message)
             this_config[param_name] = raw_value
         elif action not in CONFIGFILE_EXCLUDED_ACTIONS:
-            raise ValueError('action "%s" not implemented' % action)
+            raise ValueError(f'action "{action}" not implemented')
 
     config_dir = os.path.dirname(path)
     format_outfiles_coupling(this_config, config_dir)
@@ -652,12 +656,10 @@ def read_configuration(path, verbose=False):
     parse_func = CONFIG_FILE_PARSERS.get(file_extension, None)
     if not parse_func:
         if verbose:
-            print("MISSING CONFIG-FILE PARSER FOR: %s" % path)
+            print(f"MISSING CONFIG-FILE PARSER FOR: {path}")
         return {}
 
-    # -- NORMAL CASE:
-    parsed = parse_func(path)
-    return parsed
+    return parse_func(path)
 
 
 def config_filenames():
@@ -677,7 +679,7 @@ def config_filenames():
 def load_configuration(defaults, verbose=False):
     for filename in config_filenames():
         if verbose:
-            print('Loading config defaults from "%s"' % filename)
+            print(f'Loading config defaults from "{filename}"')
         defaults.update(read_configuration(filename, verbose))
 
     if verbose:
@@ -873,8 +875,7 @@ class Configuration(object):
         # -- OTHERWISE in AUTO-DETECT mode: color="auto"
         output_file = file or sys.stdout
         isatty = getattr(output_file, "isatty", lambda: True)
-        colored = isatty()
-        return colored
+        return isatty()
 
     def make_command_args(self, command_args=None, verbose=None):
         # pylint: disable=too-many-branches, too-many-statements
@@ -968,13 +969,12 @@ class Configuration(object):
             parser.error("CONFIG-PARAM-TYPE-ERROR: format = %r (expected: list<%s>, was: %s)" %
                          (self.format, six.text_type, type(self.format).__name__))
 
-        bad_formats_and_errors = self.select_bad_formats_with_errors()
-        if bad_formats_and_errors:
+        if bad_formats_and_errors := self.select_bad_formats_with_errors():
             bad_format_parts = []
             for name, error in bad_formats_and_errors:
-                message = "%s (problem: %s)" % (name, error)
+                message = f"{name} (problem: {error})"
                 bad_format_parts.append(message)
-            parser.error("BAD_FORMAT=%s" % ", ".join(bad_format_parts))
+            parser.error(f'BAD_FORMAT={", ".join(bad_format_parts)}')
 
     def setup_tag_expression(self, tags=None):
         """
@@ -1066,7 +1066,7 @@ class Configuration(object):
                     if formatter_error == "KeyError":
                         formatter_error = "LookupError"
                     if self.verbose:
-                        formatter_error += ": %s" % str(e)
+                        formatter_error += f": {str(e)}"
                     bad_formats.append((format_name, formatter_error))
         return bad_formats
 
@@ -1092,9 +1092,7 @@ class Configuration(object):
 
         if self.include_re and self.include_re.search(filename) is None:
             return True
-        if self.exclude_re and self.exclude_re.search(filename) is not None:
-            return True
-        return False
+        return bool(self.exclude_re and self.exclude_re.search(filename) is not None)
 
     def setup_logging(self, level=None, configfile=None, **kwargs):
         """
@@ -1116,12 +1114,7 @@ class Configuration(object):
         :param configfile:  Configuration filename for fileConfig() setup.
         :param kwargs:      Passed to :func:`logging.basicConfig()`
         """
-        if level is None:
-            level = self.logging_level      # pylint: disable=no-member
-        else:
-            # pylint: disable=import-outside-toplevel
-            level = logging_check_level(level)
-
+        level = self.logging_level if level is None else logging_check_level(level)
         if configfile:
             logging_config_fileConfig(configfile)
         else:
@@ -1169,7 +1162,7 @@ class Configuration(object):
         environment_file = "environment.py"
         if stage:
             # -- USE A TEST STAGE: Select different set of implementations.
-            prefix = stage + "_"
+            prefix = f"{stage}_"
             steps_dir = prefix + steps_dir
             environment_file = prefix + environment_file
 

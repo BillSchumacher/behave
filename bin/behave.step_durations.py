@@ -38,17 +38,14 @@ class StepDurationData(object):
 
     @staticmethod
     def make_step_name(step):
-        step_name = "%s %s" % (step.step_type.capitalize(), step.name)
-        return step_name
+        return f"{step.step_type.capitalize()} {step.name}"
 
     def process_step(self, step):
         step_name = self.make_step_name(step)
         if not self.step_name:
             self.step_name = step_name
-        if self.min_duration > step.duration:
-            self.min_duration = step.duration
-        if self.max_duration < step.duration:
-            self.max_duration = step.duration
+        self.min_duration = min(self.min_duration, step.duration)
+        self.max_duration = max(self.max_duration, step.duration)
         self.durations.append(step.duration)
 
 
@@ -74,8 +71,7 @@ class BehaveDurationData(object):
 
     def process_step(self, step):
         step_name = StepDurationData.make_step_name(step)
-        known_step = self.step_registry.get(step_name, None)
-        if known_step:
+        if known_step := self.step_registry.get(step_name, None):
             known_step.process_step(step)
         else:
             step_data = StepDurationData(step)
@@ -145,7 +141,7 @@ Read behave JSON data file and extract steps with longest duration."""
         min_duration = None
     json_filename = filenames[0]
     if not os.path.exists(json_filename):
-        parser.error("JSON file '%s' not found" % json_filename)
+        parser.error(f"JSON file '{json_filename}' not found")
 
     # -- NORMAL PROCESSING: Read JSON, extract step durations and report them.
     features = json_parser.parse(json_filename)

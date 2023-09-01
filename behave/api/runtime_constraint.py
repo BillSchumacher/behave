@@ -26,11 +26,12 @@ def require_min_python_version(minimal_version):
         python_version = float("%s.%s" % sys.version_info[:2])
         minimal_version = float(minimal_version)
     elif not isinstance(minimal_version, tuple):
-        raise TypeError("string or tuple (was: %s)" % type(minimal_version))
+        raise TypeError(f"string or tuple (was: {type(minimal_version)})")
 
     if python_version < minimal_version:
-        raise ConstraintError("python >= %s expected (was: %s)" % \
-                              (minimal_version, python_version))
+        raise ConstraintError(
+            f"python >= {minimal_version} expected (was: {python_version})"
+        )
 
 
 def require_min_behave_version(minimal_version):
@@ -45,5 +46,6 @@ def require_min_behave_version(minimal_version):
     minimal_version2 = minimal_version.split(".")
     if behave_version2 < minimal_version2:
         # -- USE: Tuple comparison as version comparison.
-        raise ConstraintError("behave >= %s expected (was: %s)" % \
-                              (minimal_version, behave_version))
+        raise ConstraintError(
+            f"behave >= {minimal_version} expected (was: {behave_version})"
+        )

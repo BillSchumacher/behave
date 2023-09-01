@@ -123,7 +123,7 @@ class TestPathNormalizer(object):
     def test_call__with_pattern3(self, output, expected):
         for index, line_processor in enumerate(line_processor_ioerrors):
             actual = line_processor(output)
-            assert actual == expected, "line_processor %s" % index
+            assert actual == expected, f"line_processor {index}"
 
     @pytest.mark.parametrize("output, expected", [
         (u'  File "C:\\one\\two\\three.txt", line 123, in xxx_some_method',
@@ -132,4 +132,4 @@ class TestPathNormalizer(object):
     def test_call__with_pattern4(self, output, expected):
         for index, line_processor in enumerate(line_processor_traceback):
             actual = line_processor(output)
-            assert actual == expected, "line_processor %s" % index
+            assert actual == expected, f"line_processor {index}"

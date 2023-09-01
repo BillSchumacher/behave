@@ -38,10 +38,12 @@ config_param_schema = """\
 """
 
 def is_no_option(fixed_options):
-    return any([opt.startswith("--no") for opt in fixed_options])
+    return any(opt.startswith("--no") for opt in fixed_options)
 
 
 # -- STEP: Collect information and preprocess it.
+# -- COMMON PART:
+type_name_default = "text"
 for fixed, keywords in configuration.OPTIONS:
     skip = False
     config_file_param = True
@@ -62,8 +64,6 @@ for fixed, keywords in configuration.OPTIONS:
                 assert len(opt) == 2
                 dest = opt[1:]
 
-    # -- COMMON PART:
-    type_name_default = "text"
     type_name_map = {
         "color": "Colored (Enum)",
         "tag_expression_protocol": "TagExpressionProtocol (Enum)",
@@ -88,7 +88,7 @@ for fixed, keywords in configuration.OPTIONS:
     elif action == "append":
         type_name = "sequence<text>"
     else:
-        raise ValueError("unknown action %s" % action)
+        raise ValueError(f"unknown action {action}")
 
     # -- CASE: command-line option
     text = re.sub(r"\s+", " ", keywords["help"]).strip()

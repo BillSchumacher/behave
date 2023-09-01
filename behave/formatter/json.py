@@ -100,11 +100,10 @@ class JSONFormatter(Formatter):
 
     @classmethod
     def make_table(cls, table):
-        table_data = {
+        return {
             "headings": table.headings,
-            "rows": [list(row) for row in table.rows]
+            "rows": [list(row) for row in table.rows],
         }
-        return table_data
 
     def step(self, step):
         s = {

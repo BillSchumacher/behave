@@ -126,9 +126,7 @@ def browse(ctx, language=None):
     if not page_html.exists():
         build(ctx, builder="html")
     assert page_html.exists()
-    open_cmd = "open"   # -- WORKS ON: MACOSX
-    if sys.platform.startswith("win"):
-        open_cmd = "start"
+    open_cmd = "start" if sys.platform.startswith("win") else "open"
     ctx.run("{open} {page_html}".format(open=open_cmd, page_html=page_html))
     # ctx.run('python -m webbrowser -t {page_html}'.format(page_html=page_html))
     # -- DISABLED:
@@ -142,13 +140,12 @@ def browse(ctx, language=None):
     "format": "Format/Builder to use (html, ...)",
     "language": "Language to use (en, ...)",
 })
-# pylint: disable=redefined-builtin
 def save(ctx, dest="docs.html", format="html", language=None):
     """Save/update docs under destination directory."""
     print("STEP: Generate docs in HTML format")
     build(ctx, builder=format, language=language)
 
-    print("STEP: Save docs under %s/" % dest)
+    print(f"STEP: Save docs under {dest}/")
     source_dir = Path(_sphinxdoc_get_destdir(ctx, format, language=language))
     Path(dest).rmtree_p()
     source_dir.copytree(dest)

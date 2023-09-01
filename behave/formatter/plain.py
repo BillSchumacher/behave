@@ -47,9 +47,7 @@ class PlainFormatter(Formatter):
     @property
     def multiline_indentation(self):
         if self._multiline_indentation is None:
-            offset = 0
-            if self.show_aligned_keywords:
-                offset = 2
+            offset = 2 if self.show_aligned_keywords else 0
             indentation = make_indentation(3 * self.indent_size + offset)
             self._multiline_indentation = indentation
 
@@ -94,20 +92,14 @@ class PlainFormatter(Formatter):
         if not self.SHOW_BACKGROUNDS:
             return
 
-        indent_extra = 0
-        if self.current_rule:
-            indent_extra = self.indent_size
-
+        indent_extra = self.indent_size if self.current_rule else 0
         indent = make_indentation(self.indent_size + indent_extra)
         self.write_entity(background, indent, has_tags=False)
         # text = u"%s%s: %s\n" % (indent, background.keyword, background.name)
         # self.stream.write(text)
 
     def scenario(self, scenario):
-        indent_extra = 0
-        if self.current_rule:
-            indent_extra = self.indent_size
-
+        indent_extra = self.indent_size if self.current_rule else 0
         self.reset_steps()
         self.stream.write(u"\n")
         indent = make_indentation(self.indent_size + indent_extra)
@@ -124,17 +116,14 @@ class PlainFormatter(Formatter):
 
         :param step:   Step object with result to process.
         """
-        indent_extra = 0
-        if self.current_rule:
-            indent_extra = self.indent_size
-
+        indent_extra = self.indent_size if self.current_rule else 0
         step = self.steps.pop(0)
         indent = make_indentation(2 * self.indent_size + indent_extra)
         if self.show_aligned_keywords:
             # -- RIGHT-ALIGN KEYWORDS (max. keyword width: 6):
             text = u"%s%6s %s ... " % (indent, step.keyword, step.name)
         else:
-            text = u"%s%s %s ... " % (indent, step.keyword, step.name)
+            text = f"{indent}{step.keyword} {step.name} ... "
         self.stream.write(text)
 
         status_text = step.status.name
@@ -149,7 +138,7 @@ class PlainFormatter(Formatter):
                 unicode_errors += 1
                 self.stream.write(u"%s\n" % status_text)
                 self.stream.write(u"%s while writing error message: %s\n" % \
-                                  (e.__class__.__name__, e))
+                                      (e.__class__.__name__, e))
                 if self.RAISE_OUTPUT_ERRORS:
                     raise
         else:
@@ -162,7 +151,7 @@ class PlainFormatter(Formatter):
                 except UnicodeError as e:
                     unicode_errors += 1
                     self.stream.write(u"%s while writing docstring: %s\n" % \
-                                      (e.__class__.__name__, e))
+                                          (e.__class__.__name__, e))
                     if self.RAISE_OUTPUT_ERRORS:
                         raise
             if step.table:

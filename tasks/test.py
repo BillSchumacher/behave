@@ -129,8 +129,7 @@ def select_by_prefix(args, prefixes):
     selected = []
     for arg in args.strip().split():
         assert not arg.startswith("-"), "REQUIRE: arg, not options"
-        scope = select_prefix_for(arg, prefixes)
-        if scope:
+        if scope := select_prefix_for(arg, prefixes):
             selected.append(arg)
     return " ".join(selected)
 

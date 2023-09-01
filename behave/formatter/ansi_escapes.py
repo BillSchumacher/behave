@@ -65,8 +65,8 @@ def _setup_module():
 
     for alias in aliases:
         escapes[alias] = "".join([colors[c] for c in aliases[alias].split(",")])
-        arg_alias = alias + "_arg"
-        arg_seq = aliases.get(arg_alias, aliases[alias] + ",bold")
+        arg_alias = f"{alias}_arg"
+        arg_seq = aliases.get(arg_alias, f"{aliases[alias]},bold")
         escapes[arg_alias] = "".join([colors[c] for c in arg_seq.split(",")])
 
 
@@ -110,8 +110,8 @@ def use_ansi_escape_colorbold_composites():     # pragma: no cover
         composite_escape = u"\x1b[{0}m".format(u";".join(parts))
         escapes[alias] = composite_escape
 
-        arg_alias = alias + "_arg"
-        arg_seq = aliases.get(arg_alias, aliases[alias] + ",bold")
+        arg_alias = f"{alias}_arg"
+        arg_seq = aliases.get(arg_alias, f"{aliases[alias]},bold")
         parts = [color_codes[c] for c in arg_seq.split(",")]
         composite_escape = u"\x1b[{0}m".format(u";".join(parts))
         escapes[arg_alias] = composite_escape

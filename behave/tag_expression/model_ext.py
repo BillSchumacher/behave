@@ -73,18 +73,13 @@ class Matcher(Expression):
         return self.pattern
 
     def evaluate(self, values):
-        for value in values:
-            # -- REQUIRE: case-sensitive matching
-            if fnmatchcase(value, self.pattern):
-                return True
-        # -- OTHERWISE: no-match
-        return False
+        return any(fnmatchcase(value, self.pattern) for value in values)
 
     def __str__(self):
         return self.pattern
 
     def __repr__(self):
-        return "Matcher('%s')" % self.pattern
+        return f"Matcher('{self.pattern}')"
 
     @staticmethod
     def contains_wildcards(text):

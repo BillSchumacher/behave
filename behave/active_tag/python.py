@@ -45,7 +45,7 @@ class VersionValueObject(ValueObject):
             return version
         elif isinstance(version, six.string_types):
             # -- CONVERT: string-to-tuple of numbers
-            return tuple([int(x) for x in version.split(".")])
+            return tuple(int(x) for x in version.split("."))
 
         # -- OTHERWISE:
         raise TypeError("Expect: string or tuple")

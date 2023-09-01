@@ -33,7 +33,7 @@ def test_make_tag_expression__with_v2():
 ])
 def test_select_tag_expression_parser4any__with_v1(text):
     parser = select_tag_expression_parser4any(text)
-    assert parser is parse_tag_expression_v1, "tag_expression: %s" % text
+    assert parser is parse_tag_expression_v1, f"tag_expression: {text}"
 
 
 @pytest.mark.parametrize("text", [
@@ -47,4 +47,4 @@ def test_select_tag_expression_parser4any__with_v1(text):
 ])
 def test_select_tag_expression_parser4any__with_v2(text):
     parser = select_tag_expression_parser4any(text)
-    assert parser is parse_tag_expression_v2, "tag_expression: %s" % text
+    assert parser is parse_tag_expression_v2, f"tag_expression: {text}"

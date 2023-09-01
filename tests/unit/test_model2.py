@@ -24,7 +24,7 @@ def make_row(*data, **kwargs):
 
 
 def step_to_text(step, indentation="    "):
-    step_text = u"%s %s" % (step.keyword, step.name)
+    step_text = f"{step.keyword} {step.name}"
     more_text = None
     if step.text:
         more_text = ModelDescriptor.describe_docstring(step.text, indentation)

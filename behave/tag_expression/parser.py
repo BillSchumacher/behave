@@ -84,8 +84,4 @@ class TagExpressionParser(_TagExpressionParser):
     @classmethod
     def make_operand(cls, text):
         """Creates operand-object from parsed text."""
-        if Matcher.contains_wildcards(text):
-            # -- USE MATCHER: Text contains matcher-wildcards.
-            return Matcher(text)
-        else:
-            return Literal(text)
+        return Matcher(text) if Matcher.contains_wildcards(text) else Literal(text)

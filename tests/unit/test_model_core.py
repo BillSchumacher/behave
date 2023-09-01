@@ -38,7 +38,7 @@ class TestStatus(object):
     @pytest.mark.parametrize("enum_value", list(Status.__members__.values()))
     def test_equals__with_unknown_name(self, enum_value):
         assert enum_value != "__UNKNOWN__"
-        assert not (enum_value == "__UNKNOWN__")
+        assert enum_value != "__UNKNOWN__"
 
     @pytest.mark.parametrize("enum_value, similar_name", [
         (Status.passed, "Passed"),
@@ -102,7 +102,7 @@ class TestFileLocation(object):
 
     def test_compare_not_equal(self):
         for value1, value2 in self.same_locations:
-            assert not(value1 != value2)    # pylint: disable=unneeded-not, superfluous-parens
+            assert value1 == value2
 
         for locations in [self.ordered_locations1, self.ordered_locations2]:
             for value1, value2 in zip(locations, locations[1:]):
@@ -111,7 +111,7 @@ class TestFileLocation(object):
     def test_compare_less_than(self):
         for locations in [self.ordered_locations1, self.ordered_locations2]:
             for value1, value2 in zip(locations, locations[1:]):
-                assert value1 < value2, "FAILED: %s < %s" % (_text(value1), _text(value2))
+                assert value1 < value2, f"FAILED: {_text(value1)} < {_text(value2)}"
                 assert value1 != value2
 
     def test_compare_less_than_with_string(self):
@@ -119,35 +119,37 @@ class TestFileLocation(object):
         for value1, value2 in zip(locations, locations[1:]):
             if value1.filename == value2.filename:
                 continue
-            assert value1 < value2.filename, \
-                   "FAILED: %s < %s" % (_text(value1), _text(value2.filename))
-            assert value1.filename < value2, \
-                   "FAILED: %s < %s" % (_text(value1.filename), _text(value2))
+            assert (
+                value1 < value2.filename
+            ), f"FAILED: {_text(value1)} < {_text(value2.filename)}"
+            assert (
+                value1.filename < value2
+            ), f"FAILED: {_text(value1.filename)} < {_text(value2)}"
 
     def test_compare_greater_than(self):
         for locations in [self.ordered_locations1, self.ordered_locations2]:
             for value1, value2 in zip(locations, locations[1:]):
-                assert value2 > value1, "FAILED: %s > %s" % (_text(value2), _text(value1))
+                assert value2 > value1, f"FAILED: {_text(value2)} > {_text(value1)}"
                 assert value2 != value1
 
     def test_compare_less_or_equal(self):
         for value1, value2 in self.same_locations:
-            assert value1 <= value2, "FAILED: %s <= %s" % (_text(value1), _text(value2))
+            assert value1 <= value2, f"FAILED: {_text(value1)} <= {_text(value2)}"
             assert value1 == value2
 
         for locations in [self.ordered_locations1, self.ordered_locations2]:
             for value1, value2 in zip(locations, locations[1:]):
-                assert value1 <= value2, "FAILED: %s <= %s" % (_text(value1), _text(value2))
+                assert value1 <= value2, f"FAILED: {_text(value1)} <= {_text(value2)}"
                 assert value1 != value2
 
     def test_compare_greater_or_equal(self):
         for value1, value2 in self.same_locations:
-            assert value2 >= value1, "FAILED: %s >= %s" % (_text(value2), _text(value1))
+            assert value2 >= value1, f"FAILED: {_text(value2)} >= {_text(value1)}"
             assert value2 == value1
 
         for locations in [self.ordered_locations1, self.ordered_locations2]:
             for value1, value2 in zip(locations, locations[1:]):
-                assert value2 >= value1, "FAILED: %s >= %s" % (_text(value2), _text(value1))
+                assert value2 >= value1, f"FAILED: {_text(value2)} >= {_text(value1)}"
                 assert value2 != value1
 
     def test_filename_should_be_same_as_self(self):
@@ -157,14 +159,13 @@ class TestFileLocation(object):
 
     def test_string_conversion(self):
         for location in self.ordered_locations2:
-            expected = u"%s:%s" % (location.filename, location.line)
+            expected = f"{location.filename}:{location.line}"
             if location.line is None:
                 expected = location.filename
             assert six.text_type(location) == expected
 
     def test_repr_conversion(self):
         for location in self.ordered_locations2:
-            expected = u'<FileLocation: filename="%s", line=%s>' % \
-                       (location.filename, location.line)
+            expected = f'<FileLocation: filename="{location.filename}", line={location.line}>'
             actual = repr(location)
-            assert actual == expected, "FAILED: %s == %s" % (actual, expected)
+            assert actual == expected, f"FAILED: {actual} == {expected}"

@@ -97,20 +97,17 @@ class TestConfiguration(object):
         # -- WINDOWS-REQUIRES: normpath
         # DISABLED: pprint(d, sort_dicts=True)
         from pprint import pprint
-        extra_kwargs = {}
-        if six.PY3:
-            extra_kwargs = {"sort_dicts": True}
-
+        extra_kwargs = {"sort_dicts": True} if six.PY3 else {}
         d = configuration.read_configuration(file_path)
         pprint(d, **extra_kwargs)
         assert d["outfiles"] == [
-            os.path.normpath(ROOTDIR_PREFIX + "/absolute/path1"),
+            os.path.normpath(f"{ROOTDIR_PREFIX}/absolute/path1"),
             os.path.normpath(os.path.join(tndir, "relative/path2")),
         ]
         assert d["paths"] == [
-            os.path.normpath(ROOTDIR_PREFIX + "/absolute/path3"),
+            os.path.normpath(f"{ROOTDIR_PREFIX}/absolute/path3"),
             os.path.normpath(os.path.join(tndir, "relative/path4")),
-            ]
+        ]
         assert d["format"] == ["pretty", "tag-counter"]
         assert d["default_tags"] == ["(@foo and not @bar) or @zap"]
         assert d["stdout_capture"] is False

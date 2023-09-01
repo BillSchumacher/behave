@@ -42,7 +42,7 @@ class CommandResult(object):
         self._output = None
         if kwargs:
             names = ", ".join(kwargs.keys())
-            raise ValueError("Unexpected: %s" % names)
+            raise ValueError(f"Unexpected: {names}")
 
     @property
     def output(self):
@@ -110,10 +110,7 @@ class Command(object):
         assert isinstance(command, six.string_types)
         command_result = CommandResult()
         command_result.command = command
-        use_shell = cls.USE_SHELL
-        if "shell" in kwargs:
-            use_shell = kwargs.pop("shell")
-
+        use_shell = kwargs.pop("shell") if "shell" in kwargs else cls.USE_SHELL
         # -- BUILD COMMAND ARGS:
         if six.PY2 and isinstance(command, six.text_type):
             # -- PREPARE-FOR: shlex.split()
@@ -124,12 +121,10 @@ class Command(object):
 
         # -- TRANSFORM COMMAND (optional)
         command0 = cmdargs[0]
-        real_command = cls.COMMAND_MAP.get(command0, None)
-        if real_command:
+        if real_command := cls.COMMAND_MAP.get(command0, None):
             cmdargs0 = real_command.split()
             cmdargs = cmdargs0 + cmdargs[1:]
-        preprocessors = cls.PREPROCESSOR_MAP.get(command0)
-        if preprocessors:
+        if preprocessors := cls.PREPROCESSOR_MAP.get(command0):
             cmdargs = cls.preprocess_command(preprocessors, cmdargs, command, cwd)
 
 
@@ -156,12 +151,11 @@ class Command(object):
                 print("shell.command: {0}".format(" ".join(cmdargs)))
                 print("shell.command.output:\n{0};".format(command_result.output))
         except OSError as e:
-            command_result.stderr = u"OSError: %s" % e
+            command_result.stderr = f"OSError: {e}"
             command_result.returncode = e.errno
             assert e.errno != 0
 
-        postprocessors = cls.POSTPROCESSOR_MAP.get(command0)
-        if postprocessors:
+        if postprocessors := cls.POSTPROCESSOR_MAP.get(command0):
             command_result = cls.postprocess_command(postprocessors, command_result)
         return command_result
 
@@ -184,8 +178,7 @@ def path_glob(command, cmdargs, cwd="."):
                 new_cmdargs.append(cmdarg)
                 continue
 
-            more_args = glob.glob(cmdarg)
-            if more_args:
+            if more_args := glob.glob(cmdarg):
                 new_cmdargs.extend(more_args)
             else:
                 # -- BAD-CASE: Require at least one match.
@@ -209,7 +202,7 @@ def behave(cmdline, cwd=".", **kwargs):
     with results (collected output, returncode).
     """
     assert isinstance(cmdline, six.string_types)
-    return run("behave " + cmdline, cwd=cwd, **kwargs)
+    return run(f"behave {cmdline}", cwd=cwd, **kwargs)
 
 # -----------------------------------------------------------------------------
 # TEST MAIN:

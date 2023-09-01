@@ -127,9 +127,7 @@ def parse_tags(text):
     :return: List of tags (if successful).
     """
     # assert isinstance(text, unicode)
-    if not text:
-        return []
-    return Parser(variant="tags").parse_tags(text)
+    return [] if not text else Parser(variant="tags").parse_tags(text)
 
 
 class ParserError(Exception):
@@ -139,7 +137,7 @@ class ParserError(Exception):
         if line_number:
             message += u" at line %d" % line_number
         if line_text:
-            message += u': "%s"' % line_text.strip()
+            message += f': "{line_text.strip()}"'
         if reason:
             message += u"\nREASON: %s" % reason
         return message
@@ -158,9 +156,9 @@ class ParserError(Exception):
         arg0 = _text(self.args[0])
         if self.filename:
             filename = _text(self.filename, sys.getfilesystemencoding())
-            return u'Failed to parse "%s": %s' % (filename, arg0)
+            return f'Failed to parse "{filename}": {arg0}'
         # -- OTHERWISE:
-        return u"Failed to parse <string>: %s" % arg0
+        return f"Failed to parse <string>: {arg0}"
 
     if six.PY2:
         __unicode__ = __str__
@@ -200,11 +198,7 @@ class Parser(object):
 
     def reset(self):
         # This can probably go away.
-        if self.language:
-            self.keywords = i18n.languages[self.language]
-        else:
-            self.keywords = None
-
+        self.keywords = i18n.languages[self.language] if self.language else None
         self.state = "init"
         self.line = 0
         self.last_step_type = None
@@ -267,7 +261,7 @@ class Parser(object):
 
     def _build_background_statement(self, keyword, line):
         if self.tags:
-            msg = u"Background supports no tags: @%s" % (u" @".join(self.tags))
+            msg = f'Background supports no tags: @{" @".join(self.tags)}'
             raise ParserError(msg, self.line, self.filename, line)
         elif self.scenario_container and self.scenario_container.background:
             if self.scenario_container.background.steps:
@@ -358,21 +352,17 @@ class Parser(object):
         :return: Reason (as string) if an explanation is found.
                  Otherwise, empty string or None.
         """
-        # pylint: disable=too-many-return-statements
-        feature_keyword = self.match_keyword("feature", line)
-        if feature_keyword:
+        if feature_keyword := self.match_keyword("feature", line):
             return self.diagnose_feature_usage_error()
-        rule_keyword = self.match_keyword("rule", line)
-        if rule_keyword:
+        if rule_keyword := self.match_keyword("rule", line):
             return self.diagnose_rule_usage_error()
-        background_keyword = self.match_keyword("background", line)
-        if background_keyword:
+        if background_keyword := self.match_keyword("background", line):
             return self.diagnose_background_usage_error()
-        scenario_keyword = self.match_keyword("scenario", line)
-        if scenario_keyword:
+        if scenario_keyword := self.match_keyword("scenario", line):
             return self.diagnose_scenario_usage_error()
-        scenario_outline_keyword = self.match_keyword("scenario_outline", line)
-        if scenario_outline_keyword:
+        if scenario_outline_keyword := self.match_keyword(
+            "scenario_outline", line
+        ):
             return self.diagnose_scenario_outline_usage_error()
         # -- OTHERWISE:
         if self.variant == "feature" and not self.feature:
@@ -393,10 +383,10 @@ class Parser(object):
                 self.keywords = i18n.languages[language]
             return
 
-        func = getattr(self, "action_" + self.state, None)
+        func = getattr(self, f"action_{self.state}", None)
         if func is None:
             line = line.strip()
-            msg = u"Parser in unknown state %s;" % self.state
+            msg = f"Parser in unknown state {self.state};"
             raise ParserError(msg, self.line, self.filename, line)
 
         if not func(line):
@@ -412,8 +402,7 @@ class Parser(object):
             self.tags.extend(self.parse_tags(line))
             return True
 
-        feature_keyword = self.match_keyword("feature", line)
-        if feature_keyword:
+        if feature_keyword := self.match_keyword("feature", line):
             self._build_feature(feature_keyword, line)
             self.state = "feature"
             return True
@@ -435,27 +424,23 @@ class Parser(object):
             self.state = "taggable_statement"
             return True
 
-        rule_keyword = self.match_keyword("rule", line)
-        if rule_keyword:
+        if rule_keyword := self.match_keyword("rule", line):
             # MAYBE: Finish last rule statement
             self._build_rule_statement(rule_keyword, line)
             self.state = "rule"
             return True
 
-        scenario_keyword = self.match_keyword("scenario", line)
-        if scenario_keyword:
+        if scenario_keyword := self.match_keyword("scenario", line):
             self._build_scenario_statement(scenario_keyword, line)
             self.state = "scenario"
             return True
 
-        template_keyword = self.match_keyword("scenario_outline", line)
-        if template_keyword:
+        if template_keyword := self.match_keyword("scenario_outline", line):
             self._build_scenario_outline_statement(template_keyword, line)
             self.state = "scenario"
             return True
 
-        examples_keyword = self.match_keyword("examples", line)
-        if examples_keyword:
+        if examples_keyword := self.match_keyword("examples", line):
             self._build_examples(examples_keyword, line)
             self.state = "table"
             return True
@@ -471,8 +456,7 @@ class Parser(object):
             # -- DETECTED: Next Rule, Scenario, ScenarioOutline (or tags)
             return True
 
-        background_keyword = self.match_keyword("background", line)
-        if background_keyword:
+        if background_keyword := self.match_keyword("background", line):
             self._build_background_statement(background_keyword, line)
             self.state = "background"
             return True
@@ -490,11 +474,7 @@ class Parser(object):
           * Examples (within ScenarioOutline)
         """
         line = line.strip()
-        if self.subaction_detect_taggable_statement(line):
-            # -- DETECTED: Next Scenario, ScenarioOutline or Examples (or tags)
-            return True
-
-        return False
+        return bool(self.subaction_detect_taggable_statement(line))
 
     def action_background(self, line):
         """Entered when Background keyword/line is detected.
@@ -526,8 +506,7 @@ class Parser(object):
             # -- DETECTED: Next Rule, Scenario, ScenarioOutline (or tags)
             return True
 
-        background_keyword = self.match_keyword("background", line)
-        if background_keyword:
+        if background_keyword := self.match_keyword("background", line):
             self._build_background_statement(background_keyword, line)
             self.state = "background"
             return True
@@ -548,8 +527,7 @@ class Parser(object):
         """
         self.last_step_type = None
         line = line.strip()
-        step = self.parse_step(line)
-        if step:
+        if step := self.parse_step(line):
             # -- FIRST STEP DETECTED: End collection of description-part.
             self.state = "steps"
             self.statement.steps.append(step)
@@ -608,8 +586,7 @@ class Parser(object):
             return True
 
         line = line.strip()
-        step = self.parse_step(line)
-        if step:
+        if step := self.parse_step(line):
             self.statement.steps.append(step)
             return True
 
@@ -663,8 +640,7 @@ class Parser(object):
         removed_line_prefix = line[:self.multiline_leading]
         if removed_line_prefix.strip():
             message = u"BAD-INDENT in multiline text: "
-            message += u"Line '%s' would strip leading '%s'" % \
-                        (line, removed_line_prefix)
+            message += f"Line '{line}' would strip leading '{removed_line_prefix}'"
             raise ParserError(message, self.line, self.filename)
         return True
 
@@ -705,21 +681,24 @@ class Parser(object):
         if self.table is None:
             # -- CASE: First row of the table
             self.table = model.Table(cells, self.line)
-        else:
-            # -- CASE: Following rows of the table
-            if len(cells) != len(self.table.headings):
-                raise ParserError(u"Malformed table", self.line, self.filename)
+        elif len(cells) == len(self.table.headings):
             self.table.add_row(cells, self.line)
+        else:
+            raise ParserError(u"Malformed table", self.line, self.filename)
         return True
 
     def match_keyword(self, keyword, line):
         if not self.keywords:
             self.language = DEFAULT_LANGUAGE
             self.keywords = i18n.languages[DEFAULT_LANGUAGE]
-        for alias in self.keywords[keyword]:
-            if line.startswith(alias + ":"):
-                return alias
-        return False
+        return next(
+            (
+                alias
+                for alias in self.keywords[keyword]
+                if line.startswith(f"{alias}:")
+            ),
+            False,
+        )
 
     def parse_rule(self, text, filename=None):
         """Parse rule with optional background and scenario(s).
@@ -769,7 +748,7 @@ class Parser(object):
                 break   # -- COMMENT: Skip rest of line.
             else:
                 # -- BAD-TAG: Abort here.
-                message = u"tag: %s (line: %s)" % (word, line)
+                message = f"tag: {word} (line: {line})"
                 raise ParserError(message, self.line, self.filename)
         return tags
 
@@ -799,9 +778,13 @@ class Parser(object):
                     self.last_step_type = step_type
 
                 keyword = kw.rstrip()  # HINT: Strip optional trailing SPACE.
-                step = model.Step(self.filename, self.line,
-                                  keyword, step_type, step_text_after_keyword)
-                return step
+                return model.Step(
+                    self.filename,
+                    self.line,
+                    keyword,
+                    step_type,
+                    step_text_after_keyword,
+                )
         return None
 
     def parse_steps(self, text, filename=None):

@@ -179,12 +179,14 @@ runner = behave.runner:Runner
         assert isinstance(runner, DefaultRunnerClass)
 
     def test_make_runner_with_own_runner_class(self):
-        config = Configuration(["--runner=%s:CustomTestRunner" % self.THIS_MODULE_NAME])
+        config = Configuration([f"--runner={self.THIS_MODULE_NAME}:CustomTestRunner"])
         runner = RunnerPlugin().make_runner(config)
         assert isinstance(runner, CustomTestRunner)
 
     def test_make_runner_with_registered_runner_class(self):
-        config = Configuration(["--runner=%s:RegisteredTestRunner" % self.THIS_MODULE_NAME])
+        config = Configuration(
+            [f"--runner={self.THIS_MODULE_NAME}:RegisteredTestRunner"]
+        )
         runner = RunnerPlugin().make_runner(config)
         assert isinstance(runner, RegisteredTestRunner)
         assert isinstance(runner, ITestRunner)
@@ -192,7 +194,7 @@ runner = behave.runner:Runner
 
     def test_make_runner_with_runner_alias(self):
         config = Configuration(["--runner=custom"])
-        config.runner_aliases["custom"] = "%s:CustomTestRunner" % self.THIS_MODULE_NAME
+        config.runner_aliases["custom"] = f"{self.THIS_MODULE_NAME}:CustomTestRunner"
         runner = RunnerPlugin().make_runner(config)
         assert isinstance(runner, CustomTestRunner)
 
@@ -220,8 +222,8 @@ custom = {this_module}:CustomTestRunner
         assert exc_info.match(expected)
 
         # -- OOPS: No output
-        print("CAPTURED-OUTPUT: %s;" % captured.out)
-        print("CAPTURED-ERROR:  %s;" % captured.err)
+        print(f"CAPTURED-OUTPUT: {captured.out};")
+        print(f"CAPTURED-ERROR:  {captured.err};")
         # if six.PY2:
         #     assert "No module named unknown_module" in captured.err
         # else:
@@ -242,7 +244,9 @@ custom = {this_module}:CustomTestRunner
 
     def test_make_runner_fails_if_runner_class_is_not_a_class(self):
         with pytest.raises(InvalidClassError) as exc_info:
-            config = Configuration(["--runner=%s:INVALID_TEST_RUNNER_CLASS0" % self.THIS_MODULE_NAME])
+            config = Configuration(
+                [f"--runner={self.THIS_MODULE_NAME}:INVALID_TEST_RUNNER_CLASS0"]
+            )
             RunnerPlugin().make_runner(config)
 
         expected = "is not a class"
@@ -251,7 +255,9 @@ custom = {this_module}:CustomTestRunner
 
     def test_make_runner_fails_if_runner_class_is_not_subclass_of_runner_interface(self):
         with pytest.raises(InvalidClassError) as exc_info:
-            config = Configuration(["--runner=%s:InvalidTestRunnerNotSubclass" % self.THIS_MODULE_NAME])
+            config = Configuration(
+                [f"--runner={self.THIS_MODULE_NAME}:InvalidTestRunnerNotSubclass"]
+            )
             RunnerPlugin().make_runner(config)
 
         expected = "is not a subclass-of 'behave.api.runner:ITestRunner'"
@@ -261,22 +267,20 @@ custom = {this_module}:CustomTestRunner
     def test_make_runner_fails_if_runner_class_has_no_ctor(self):
         class_name = "InvalidTestRunnerWithoutCtor"
         with pytest.raises(TypeError) as exc_info:
-            config = Configuration(["--runner=%s:%s" % (self.THIS_MODULE_NAME, class_name)])
+            config = Configuration([f"--runner={self.THIS_MODULE_NAME}:{class_name}"])
             RunnerPlugin().make_runner(config)
 
-        expected = "Can't instantiate abstract class %s with abstract method(s)? __init__" % \
-                   class_name
+        expected = f"Can't instantiate abstract class {class_name} with abstract method(s)? __init__"
         assert exc_info.type is TypeError
         assert exc_info.match(expected)
 
     def test_make_runner_fails_if_runner_class_has_no_run_method(self):
         class_name = "InvalidTestRunnerWithoutRun"
         with pytest.raises(TypeError) as exc_info:
-            config = Configuration(["--runner=%s:%s" % (self.THIS_MODULE_NAME, class_name)])
+            config = Configuration([f"--runner={self.THIS_MODULE_NAME}:{class_name}"])
             RunnerPlugin().make_runner(config)
 
-        expected = "Can't instantiate abstract class %s with abstract method(s)? run" % \
-                   class_name
+        expected = f"Can't instantiate abstract class {class_name} with abstract method(s)? run"
         assert exc_info.type is TypeError
         assert exc_info.match(expected)
 
@@ -284,10 +288,9 @@ custom = {this_module}:CustomTestRunner
     def test_make_runner_fails_if_runner_class_has_no_undefined_steps(self):
         class_name = "InvalidTestRunnerWithoutUndefinedSteps"
         with pytest.raises(TypeError) as exc_info:
-            config = Configuration(["--runner=%s:%s" % (self.THIS_MODULE_NAME, class_name)])
+            config = Configuration([f"--runner={self.THIS_MODULE_NAME}:{class_name}"])
             RunnerPlugin().make_runner(config)
 
-        expected = "Can't instantiate abstract class %s with abstract method(s)? undefined_steps" % \
-                   class_name
+        expected = f"Can't instantiate abstract class {class_name} with abstract method(s)? undefined_steps"
         assert exc_info.type is TypeError
         assert exc_info.match(expected)

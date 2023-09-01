@@ -89,7 +89,7 @@ TABLE_DATA = [
 def step_impl(context):
     assert context.saved_table, 'context.saved_table is %r!!' % (context.saved_table, )
     value = context.active_outline['spam']
-    expected = value + ' Cans'
+    expected = f'{value} Cans'
     assert context.saved_table[0]['department'] == expected, '%r != %r' % (
         context.saved_table[0]['department'], expected)
 

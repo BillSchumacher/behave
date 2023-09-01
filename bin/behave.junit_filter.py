@@ -31,7 +31,7 @@ def xml_prettify(elem):
     return reparsed.toprettyxml(indent=" ")
 
 def xml_select_testcases_with_status(tree, status):
-    return tree.findall(".//testcase[@status='%s']" % status)
+    return tree.findall(f".//testcase[@status='{status}']")
 
 def path_select_files(paths, pattern="*.xml"):
     if not paths:
@@ -76,8 +76,7 @@ def main(args=None):
     xml_reports = path_select_files(xml_files)
     for xml_filename in xml_reports:
         tree = ET.parse(xml_filename)
-        testcases = xml_select_testcases_with_status(tree, options.status)
-        if testcases:
+        if testcases := xml_select_testcases_with_status(tree, options.status):
             report_testcases(xml_filename, testcases)
     return 0
 

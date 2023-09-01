@@ -39,7 +39,7 @@ def require_tool(tool_name):
         executable1 = os.path.normpath(os.path.join(searchdir, tool_name))
         executables = [executable1]
         if sys.platform.startswith("win"):
-            executables.append(executable1 + ".exe")
+            executables.append(f"{executable1}.exe")
 
         for executable in executables:
             # print("TOOL-CHECK: %s" % os.path.abspath(executable))
@@ -52,19 +52,16 @@ def require_tool(tool_name):
 
 
 def as_bool_string(value):
-    if bool(value):
-        return "yes"
-    else:
-        return "no"
+    return "yes" if bool(value) else "no"
 
 
 def discover_ci_server():
     # pylint: disable=invalid-name
     ci_server = "none"
     CI = os.environ.get("CI", "false").lower() == "true"
-    GITHUB_ACTIONS = os.environ.get("GITHUB_ACTIONS", "false").lower() == "true"
-    APPVEYOR = os.environ.get("APPVEYOR", "false").lower() == "true"
     if CI:
+        APPVEYOR = os.environ.get("APPVEYOR", "false").lower() == "true"
+        GITHUB_ACTIONS = os.environ.get("GITHUB_ACTIONS", "false").lower() == "true"
         if GITHUB_ACTIONS:
             ci_server = "github-actions"
         elif APPVEYOR:
@@ -84,7 +81,7 @@ active_tag_value_provider = {
     "xmllint": as_bool_string(require_tool("xmllint")),
     "ci": discover_ci_server()
 }
-active_tag_value_provider.update(ACTIVE_TAG_VALUE_PROVIDER4PYTHON)
+active_tag_value_provider |= ACTIVE_TAG_VALUE_PROVIDER4PYTHON
 active_tag_matcher = ActiveTagMatcher(active_tag_value_provider)
 
 

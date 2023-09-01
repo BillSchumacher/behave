@@ -25,9 +25,7 @@ CURSOR_UPS = [ansi_escapes.up(count) for count in range(10)]
 
 
 def colorize(text, color):
-    color_escape = ""
-    if color:
-        color_escape = ansi_escapes.colors[color]
+    color_escape = ansi_escapes.colors[color] if color else ""
     return color_escape + text + ansi_escapes.escapes["reset"]
 
 

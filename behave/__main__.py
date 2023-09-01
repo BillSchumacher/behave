@@ -64,7 +64,7 @@ def run_behave(config, runner_class=None):
     # pylint: disable=too-many-branches, too-many-statements, too-many-return-statements
 
     if config.version:
-        print("behave " + BEHAVE_VERSION)
+        print(f"behave {BEHAVE_VERSION}")
         return 0
 
     if config.tags_help:
@@ -83,7 +83,7 @@ def run_behave(config, runner_class=None):
 
     if not config.format:
         config.format = [config.default_format]
-    elif config.format and "format" in config.defaults:
+    elif "format" in config.defaults:
         # -- CASE: Formatter are specified in behave configuration file.
         #    Check if formatter are provided on command-line, too.
         if len(config.format) == len(config.defaults["format"]):
@@ -111,41 +111,38 @@ def run_behave(config, runner_class=None):
         print("USING RUNNER: {0}".format(make_scoped_class_name(runner)))
         failed = runner.run()
     except ParserError as e:
-        print(u"ParserError: %s" % e)
+        print(f"ParserError: {e}")
     except ConfigError as e:
-        print(u"ConfigError: %s" % e)
+        print(f"ConfigError: {e}")
     except FileNotFoundError as e:
-        print(u"FileNotFoundError: %s" % e)
+        print(f"FileNotFoundError: {e}")
     except InvalidFileLocationError as e:
-        print(u"InvalidFileLocationError: %s" % e)
+        print(f"InvalidFileLocationError: {e}")
     except InvalidFilenameError as e:
-        print(u"InvalidFilenameError: %s" % e)
+        print(f"InvalidFilenameError: {e}")
     except ModuleNotFoundError as e:
-        print(u"ModuleNotFoundError: %s" % e)
+        print(f"ModuleNotFoundError: {e}")
     except ClassNotFoundError as e:
-        print(u"ClassNotFoundError: %s" % e)
+        print(f"ClassNotFoundError: {e}")
     except InvalidClassError as e:
-        print(u"InvalidClassError: %s" % e)
+        print(f"InvalidClassError: {e}")
     except ImportError as e:
-        print(u"%s: %s" % (e.__class__.__name__, e))
+        print(f"{e.__class__.__name__}: {e}")
         if DEBUG:
             raise
     except ConstraintError as e:
-        print(u"ConstraintError: %s" % e)
+        print(f"ConstraintError: {e}")
     except Exception as e:
         # -- DIAGNOSTICS:
         text = _text(e)
-        print(u"Exception %s: %s" % (e.__class__.__name__, text))
+        print(f"Exception {e.__class__.__name__}: {text}")
         raise
 
     if config.show_snippets and runner and runner.undefined_steps:
         print_undefined_step_snippets(runner.undefined_steps,
                                       colored=config.has_colored_mode())
 
-    return_code = 0
-    if failed:
-        return_code = 1
-    return return_code
+    return 1 if failed else 0
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +179,7 @@ def print_language_list(file=None):
     for iso_code in sorted(iso_codes):
         native = languages[iso_code]["native"]
         name = languages[iso_code]["name"]
-        print_(u"  %s: %s / %s" % (iso_code, native, name))
+        print_(f"  {iso_code}: {native} / {name}")
 
 
 def print_language_help(language, file=None):
@@ -199,11 +196,11 @@ def print_language_help(language, file=None):
         file = codecs.getwriter("UTF-8")(file or sys.stdout)
 
     if language not in languages:
-        print_("%s is not a recognised language: try --lang-list" % language)
+        print_(f"{language} is not a recognised language: try --lang-list")
         return 1
 
     trans = languages[language]
-    print_(u"Translations for %s / %s" % (trans["name"], trans["native"]))
+    print_(f'Translations for {trans["name"]} / {trans["native"]}')
     for kw in trans:
         if kw in "name native".split():
             continue
@@ -224,14 +221,13 @@ def print_formatters(file=None):
     formatter_items = sorted(format_items(resolved=True), key=itemgetter(0))
     formatter_names = [item[0]  for item in formatter_items]
     column_size = compute_words_maxsize(formatter_names)
-    schema = u"  %-"+ _text(column_size) +"s  %s"
+    schema = f"  %-{_text(column_size)}s  %s"
     problematic_formatters = []
 
     print_("AVAILABLE FORMATTERS:")
     for name, formatter_class in formatter_items:
         formatter_description = getattr(formatter_class, "description", "")
-        formatter_error = getattr(formatter_class, "error", None)
-        if formatter_error:
+        if formatter_error := getattr(formatter_class, "error", None):
             # -- DIAGNOSTICS: Indicate if formatter definition has a problem.
             problematic_formatters.append((name, formatter_error))
         else:
@@ -256,15 +252,16 @@ def print_runners(runner_aliases, file=None):
 
     runner_names = sorted(runner_aliases.keys())
     column_size = compute_words_maxsize(runner_names)
-    schema1 = u"  %-"+ _text(column_size) +"s  = %s%s"
-    schema2 = u"  %-"+ _text(column_size) +"s    %s"
+    schema1 = f"  %-{_text(column_size)}s  = %s%s"
+    schema2 = f"  %-{_text(column_size)}s    %s"
     problematic_runners = []
 
     print_("AVAILABLE RUNNERS:")
     for runner_name in runner_names:
         scoped_class_name = runner_aliases[runner_name]
-        problem = RunnerPlugin.make_problem_description(scoped_class_name, use_details=True)
-        if problem:
+        if problem := RunnerPlugin.make_problem_description(
+            scoped_class_name, use_details=True
+        ):
             problematic_runners.append((runner_name, problem))
         else:
             # -- NORMAL CASE:
@@ -290,9 +287,9 @@ def main(args=None):
         return run_behave(config)
     except ConfigError as e:
         exception_class_name = e.__class__.__name__
-        print("%s: %s" % (exception_class_name, e))
+        print(f"{exception_class_name}: {e}")
     except TagExpressionError as e:
-        print("TagExpressionError: %s" % e)
+        print(f"TagExpressionError: {e}")
     return 1    # FAILED:
 
 if __name__ == "__main__":

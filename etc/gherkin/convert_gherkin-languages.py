@@ -54,9 +54,8 @@ def download_file(source_url, filename=None):
     # dest_encoding = encoding or "UTF-8"
     with urlopen(source_url) as f:
         contents = f.read()     # .decode(source_encoding)
-        dest_file = open(filename, "wb+")
-        dest_file.write(contents)
-        dest_file.close()
+        with open(filename, "wb+") as dest_file:
+            dest_file.write(contents)
 
 
 def yaml_normalize(data):
@@ -80,33 +79,12 @@ def data_normalize(data, verbose=False):
     """
     for language in data:
         if verbose:
-            print("Language: %s ..." % language)
+            print(f"Language: {language} ...")
         # -- STEP: Normalize attribute "scenarioOutline" => "scenario_outline"
         lang_keywords = data[language]
         lang_keywords[u"scenario_outline"] = lang_keywords[u"scenarioOutline"]
         del lang_keywords[u"scenarioOutline"]
 
-        # -- DEPRECATED: STEP: Normalize step keywords.
-        if False:
-            for k in lang_keywords:
-                if k in STEP_KEYWORDS:
-                    values = lang_keywords[k]
-                    # if isinstance(values, six.string_types):
-                    #    continue
-                    assert isinstance(values, list)
-                    values2 = []
-                    for step_keyword in values:
-                        if step_keyword.endswith(" "):
-                            # -- NORMAL CASE: Needs trailing space as separator.
-                            # STRIP IT.
-                            step_keyword = step_keyword[:-1]
-                        else:
-                            # -- SPECIAL CASE: Needs no space (Chinese, Japanese, ...)
-                            # MARK IT: With trailing "<" (less-than), needed by parser.
-                            step_keyword += "<"
-                        values2.append(step_keyword)
-                    # BAD: values2 = [item.strip() for item in values]
-                    lang_keywords[k] = values2
     return data
 
 
@@ -193,17 +171,17 @@ def main(args=None):
 
     options = parser.parse_args(args)
     if not os.path.isfile(options.json_file):
-        parser.error("JSON file not found: %s" % options.json_file)
+        parser.error(f"JSON file not found: {options.json_file}")
     if not options.output_file:
         options.output_file = "i18n.py"
 
     try:
-        print("Writing %s .." % options.output_file)
+        print(f"Writing {options.output_file} ..")
         gherkin_languages_to_python_module(options.json_file, options.output_file,
                                            encoding=options.encoding,
                                            verbose=options.verbose)
     except Exception as e:
-        message = "%s: %s" % (e.__class__.__name__, e)
+        message = f"{e.__class__.__name__}: {e}"
         sys.exit(message)
     return 0
 

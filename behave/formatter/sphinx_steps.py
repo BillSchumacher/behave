@@ -52,12 +52,7 @@ class StepsModule(object):
             # -- DISCOVER ON DEMAND: From step definitions (module).
             # REQUIRED: To discover complete canonical module name.
             module = self.module
-            if module:
-                # -- USED-BY: Imported step libraries.
-                module_name = self.module.__name__
-            else:
-                # -- USED-BY: features/steps/*.py (without __init__.py)
-                module_name = self.module_name
+            module_name = self.module.__name__ if module else self.module_name
             self._name = module_name
         return self._name
 
@@ -77,10 +72,7 @@ class StepsModule(object):
 
     @property
     def module_doc(self):
-        module = self.module
-        if module:
-            return inspect.getdoc(module)
-        return None
+        return inspect.getdoc(module) if (module := self.module) else None
 
     def append(self, step_definition):
         self.step_definitions.append(step_definition)
@@ -143,12 +135,12 @@ class SphinxStepsDocumentGenerator(object):
         step_text = step_definition.pattern
         if "`" in step_text:
             step_text = step_text.replace("`", r"\`")
-        return u"%s %s" % (step_type_text, step_text)
+        return f"{step_type_text} {step_text}"
 
     def ensure_destdir_exists(self):
         assert self.destdir
         if os.path.isfile(self.destdir):
-            print("OOPS: remove %s" % self.destdir)
+            print(f"OOPS: remove {self.destdir}")
             os.remove(self.destdir)
         if not os.path.exists(self.destdir):
             os.makedirs(self.destdir)
@@ -167,8 +159,7 @@ class SphinxStepsDocumentGenerator(object):
             if not step_module:
                 filename = inspect.getfile(step_definition.func)
                 module_name = inspect.getmodulename(filename)
-                assert module_name, \
-                    "step_definition: %s" % step_definition.location
+                assert module_name, f"step_definition: {step_definition.location}"
                 step_module = StepsModule(module_name)
                 step_modules_map[step_filename] = step_module
             step_module.append(step_definition)
@@ -185,12 +176,11 @@ class SphinxStepsDocumentGenerator(object):
             filename += ".rst"
         if self.stdout_mode:
             stream = self.stream
-            document = sphinx_util.DocumentWriter(stream, should_close=False)
+            return sphinx_util.DocumentWriter(stream, should_close=False)
         else:
             self.ensure_destdir_exists()
             filename = os.path.join(self.destdir, filename)
-            document = sphinx_util.DocumentWriter.open(filename)
-        return document
+            return sphinx_util.DocumentWriter.open(filename)
 
     def write_docs(self):
         step_modules = self.discover_step_modules()

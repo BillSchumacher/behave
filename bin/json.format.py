@@ -48,12 +48,8 @@ def json_format(filename, indent=DEFAULT_INDENT_SIZE, **kwargs):
     console  = kwargs.get("console", logging.getLogger("console"))
     encoding = kwargs.get("encoding", None)
     dry_run  = kwargs.get("dry_run", False)
-    if indent is None:
-        sort_keys = False
-    else:
-        sort_keys = True
-
-    message = "%s ..." % filename
+    sort_keys = indent is not None
+    message = f"{filename} ..."
 #    if not (os.path.exists(filename) and os.path.isfile(filename)):
 #        console.error("%s ERROR: file not found.", message)
 #        return 0
@@ -71,9 +67,8 @@ def json_format(filename, indent=DEFAULT_INDENT_SIZE, **kwargs):
         console.info("%s SKIP (already pretty)", message)
         return 2 #< SKIPPED.
     elif not dry_run:
-        outfile = open(filename, "w")
-        outfile.write(contents2)
-        outfile.close()
+        with open(filename, "w") as outfile:
+            outfile.write(contents2)
         console.warning("%s OK", message)
         return 1 #< OK
 

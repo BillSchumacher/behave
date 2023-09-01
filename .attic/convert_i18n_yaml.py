@@ -47,7 +47,7 @@ def main(args=None):
 
     options = parser.parse_args(args)
     if not os.path.isfile(options.yaml_file):
-        parser.error("YAML file not found: %s" % options.yaml_file)
+        parser.error(f"YAML file not found: {options.yaml_file}")
 
     # -- STEP 1: Load YAML data.
     languages = yaml.load(open(options.yaml_file))

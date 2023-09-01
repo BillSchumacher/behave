@@ -154,12 +154,18 @@ class TestContext(unittest.TestCase):
         self.context._pop()
         assert self.context.thing == "stuff"
         assert self.context.other_thing == "more stuff"
-        assert getattr(self.context, "third_thing", None) is None, "%s is not None" % self.context.third_thing
+        assert (
+            getattr(self.context, "third_thing", None) is None
+        ), f"{self.context.third_thing} is not None"
 
         self.context._pop()
         assert self.context.thing == "stuff"
-        assert getattr(self.context, "other_thing", None) is None, "%s is not None" % self.context.other_thing
-        assert getattr(self.context, "third_thing", None) is None, "%s is not None" % self.context.third_thing
+        assert (
+            getattr(self.context, "other_thing", None) is None
+        ), f"{self.context.other_thing} is not None"
+        assert (
+            getattr(self.context, "third_thing", None) is None
+        ), f"{self.context.third_thing} is not None"
 
     def test_masking_existing_user_attribute_when_verbose_causes_warning(self):
         warns = []
@@ -785,7 +791,7 @@ class FsMock(object):
 
     def walk(self, path, locations=None, followlinks=False):
         if locations is None:
-            assert path in self.dirs, "%s not in %s" % (path, self.dirs)
+            assert path in self.dirs, f"{path} not in {self.dirs}"
             locations = []
         dirnames = []
         filenames = []

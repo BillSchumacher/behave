@@ -167,8 +167,7 @@ class TestFeatureLineDatabase(object):
                 next_entity_line = next_entity.line
             if next_line >= next_entity_line:
                 # -- EXCLUDE: Scenarios in a ScenarioOutline
-                print("EXCLUDED: %s: %s (line=%s)" %
-                      (run_item.keyword, run_item.name, run_item.line))
+                print(f"EXCLUDED: {run_item.keyword}: {run_item.name} (line={run_item.line})")
                 continue
 
             selected = line_database.select_run_item_by_line(next_line)

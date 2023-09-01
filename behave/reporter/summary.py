@@ -25,10 +25,7 @@ STATUS_ORDER = (Status.passed, Status.failed, Status.skipped,
 # UTILITY FUNCTIONS:
 # ---------------------------------------------------------------------------
 def pluralize(word, count=1, suffix="s"):
-    if count == 1:
-        return word
-    # -- OTHERWISE:
-    return "{0}{1}".format(word, suffix)
+    return word if count == 1 else "{0}{1}".format(word, suffix)
 
 
 def compute_summary_sum(summary):
@@ -37,12 +34,7 @@ def compute_summary_sum(summary):
     :param summary: Summary counts (as dict).
     :return: Sum of all counts (as integer).
     """
-    counts_sum = 0
-    for name, count in summary.items():
-        if name == "all":
-            continue    # IGNORE IT.
-        counts_sum += count
-    return counts_sum
+    return sum(count for name, count in summary.items() if name != "all")
 
 
 def format_summary0(statement_type, summary):
@@ -80,7 +72,7 @@ def format_summary(statement_type, summary):
         name = status.name
         if status.name == "passed":
             statement = pluralize(statement_type, counts)
-            name = u"%s passed" % statement
+            name = f"{statement} passed"
         part = u"%d %s" % (counts, name)
         parts.append(part)
     return ", ".join(parts) + "\n"
@@ -137,8 +129,7 @@ class SummaryReporter(Reporter):
         self.feature_summary = summary_zero_data.copy()
         self.rule_summary = summary_zero_data.copy()
         self.scenario_summary = summary_zero_data.copy()
-        self.step_summary = {Status.undefined.name: 0}
-        self.step_summary.update(summary_zero_data)
+        self.step_summary = {Status.undefined.name: 0} | summary_zero_data
         self.duration = 0.0
         self.run_starttime = 0
         self.run_endtime = 0

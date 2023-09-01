@@ -51,10 +51,10 @@ class StepRegistry(object):
                 return
             elif existing.match(step_text):     # -- SIMPLISTIC
                 message = u"%s has already been defined in\n  existing step %s"
-                new_step = u"@%s('%s')" % (step_type, step_text)
+                new_step = f"@{step_type}('{step_text}')"
                 existing.step_type = step_type
                 existing_step = existing.describe()
-                existing_step += u" at %s" % existing.location
+                existing_step += f" at {existing.location}"
                 raise AmbiguousStep(message % (new_step, existing_step))
         step_definitions.append(make_matcher(func, step_text))
 
@@ -66,10 +66,14 @@ class StepRegistry(object):
             candidates = list(candidates)
             candidates += more_steps
 
-        for step_definition in candidates:
-            if step_definition.match(step.name):
-                return step_definition
-        return None
+        return next(
+            (
+                step_definition
+                for step_definition in candidates
+                if step_definition.match(step.name)
+            ),
+            None,
+        )
 
     def find_match(self, step):
         candidates = self.steps[step.step_type]
@@ -80,8 +84,7 @@ class StepRegistry(object):
             candidates += more_steps
 
         for step_definition in candidates:
-            result = step_definition.match(step.name)
-            if result:
+            if result := step_definition.match(step.name):
                 return result
 
         return None

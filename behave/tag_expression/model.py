@@ -36,11 +36,7 @@ Expression.to_string = _Expression_to_string
 # -----------------------------------------------------------------------------
 def _Not_to_string(self):
     """Provide nicer/more compact output if Literal(s) are involved."""
-    # MAYBE: Literal/True_ need no parenthesis
-    schema = "not ( {0} )"
-    if isinstance(self.term, (And, Or)):
-        # -- REASON: And/Or term have parenthesis already.
-        schema = "not {0}"
+    schema = "not {0}" if isinstance(self.term, (And, Or)) else "not ( {0} )"
     return schema.format(self.term)
 
 

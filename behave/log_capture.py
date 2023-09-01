@@ -105,10 +105,10 @@ class LoggingCapture(BufferingHandler):
         Returns boolean indicating whether a match was found.
         """
         pattern = re.compile(pattern)
-        for record in self.buffer:
-            if pattern.search(record.getMessage()) is not None:
-                return True
-        return False
+        return any(
+            pattern.search(record.getMessage()) is not None
+            for record in self.buffer
+        )
 
     def any_errors(self):
         """Search through the buffer for any ERROR or CRITICAL events.

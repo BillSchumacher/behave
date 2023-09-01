@@ -75,11 +75,7 @@ def select_best_encoding(outstream=None):
     """
     outstream = outstream or sys.stdout
     encoding = getattr(outstream, "encoding", None) or sys.getdefaultencoding()
-    if is_ascii_encoding(encoding):
-        # -- REQUIRED-FOR: Python2
-        # MAYBE: locale.getpreferredencoding()
-        return "utf-8"
-    return encoding
+    return "utf-8" if is_ascii_encoding(encoding) else encoding
 
 
 def text(value, encoding=None, errors=None):
@@ -152,13 +148,9 @@ def ensure_stream_with_encoder(stream, encoding=None):
     if not encoding:
         encoding = select_best_encoding(stream)
 
-    if six.PY3:
-        return stream
-    elif hasattr(stream, "stream"):
-        return stream    # Already wrapped with a codecs.StreamWriter
-    else:
+    if not six.PY3 and not hasattr(stream, "stream"):
         assert six.PY2
         # py2 does, however, sometimes declare an encoding on sys.stdout,
         # even if it doesn't use it (or it might be explicitly None)
         stream = codecs.getwriter(encoding)(stream)
-        return stream
+    return stream

@@ -55,14 +55,15 @@ class BasicFixture(object):
 
     def cleanup(self):
         self.cleanup_called = True
-        print("%s.cleanup: %s" % (self.__class__.__name__, self.name))
+        print(f"{self.__class__.__name__}.cleanup: {self.name}")
 
     def __str__(self):
         args_text = ", ".join([str(arg) for arg in self.args])
-        kwargs_parts = ["%s= %s" % (key, value)
-            for key, value in sorted(six.iteritems(self.kwargs))]
+        kwargs_parts = [
+            f"{key}= {value}" for key, value in sorted(six.iteritems(self.kwargs))
+        ]
         kwargs_text = ", ".join(kwargs_parts)
-        return "%s: args=%s; kwargs=%s" % (self.name, args_text, kwargs_text)
+        return f"{self.name}: args={args_text}; kwargs={kwargs_text}"
 
 
 class FooFixture(BasicFixture): pass
@@ -285,9 +286,9 @@ class TestUseFixture(object):
         def foo(context, checkpoints, *args, **kwargs):
             fixture_object = FooFixture.setup(*args, **kwargs)
             setattr(context, fixture_object.name, fixture_object)
-            checkpoints.append("foo.setup:%s" % fixture_object.name)
+            checkpoints.append(f"foo.setup:{fixture_object.name}")
             yield fixture_object
-            checkpoints.append("foo.cleanup:%s" % fixture_object.name)
+            checkpoints.append(f"foo.cleanup:{fixture_object.name}")
             fixture_object.cleanup()
 
         checkpoints = []
@@ -341,8 +342,6 @@ class TestUseFixture(object):
         def bad_with_setup_error(context, checkpoints, *args, **kwargs):
             checkpoints.append("bad.setup_with_error")
             raise FixtureSetupError()
-            yield FooFixture(*args, **kwargs)
-            checkpoints.append("bad.cleanup:NOT_REACHED")
 
         # -- PERFORM-TEST:
         the_fixture = None
@@ -364,16 +363,14 @@ class TestUseFixture(object):
         @fixture
         def foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield FooFixture(*args, **kwargs)
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def bad_with_setup_error(context, checkpoints, *args, **kwargs):
             checkpoints.append("bad.setup_with_error")
             raise FixtureSetupError()
-            yield FooFixture(*args, **kwargs)
-            checkpoints.append("bad.cleanup:NOT_REACHED")
 
         # -- PERFORM-TEST:
         the_fixture1 = None
@@ -420,9 +417,9 @@ class TestUseFixture(object):
         @fixture
         def foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield FooFixture(*args, **kwargs)
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def bad_with_cleanup_error(context, checkpoints, *args, **kwargs):
@@ -430,7 +427,6 @@ class TestUseFixture(object):
             yield FooFixture(*args, **kwargs)
             checkpoints.append("bad.cleanup_with_error")
             raise FixtureCleanupError()
-            checkpoints.append("bad.cleanup.done:NOT_REACHED")
 
         # -- PERFORM TEST:
         the_fixture1 = None
@@ -465,7 +461,6 @@ class TestUseFixture(object):
             checkpoints.append("bad.setup_with_error")
             context.add_cleanup(cleanup_bad_with_error)
             raise FixtureSetupError()
-            return FooFixture("NOT_REACHED")
 
         # -- PERFORM TEST:
         checkpoints = []
@@ -512,9 +507,9 @@ class TestUseFixtureByTag(object):
         def foo(context, *args, **kwargs):
             # -- NOTE checkpoints: Injected from outer scope.
             params = "%r, %r" % (args, kwargs)
-            checkpoints.append("foo.setup: %s" % params)
+            checkpoints.append(f"foo.setup: {params}")
             yield "fixture.foo"
-            checkpoints.append("foo.cleanup: %s" % params)
+            checkpoints.append(f"foo.cleanup: {params}")
 
         fixture_registry = {
             "fixture.foo": fixture_call_params(foo, 1, 2, 3, name="foo_1")
@@ -578,9 +573,9 @@ class TestCompositeFixture(object):
         @fixture
         def fixture_foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "foo")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def composite2(context, checkpoints, *args, **kwargs):
@@ -605,16 +600,14 @@ class TestCompositeFixture(object):
         @fixture
         def fixture_foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "foo")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def bad_with_setup_error(context, checkpoints, *args, **kwargs):
             checkpoints.append("bad.setup_with_error")
             raise FixtureSetupError("OOPS")
-            yield
-            checkpoints.append("bad.cleanup:NOT_REACHED")
 
         @fixture
         def composite3(context, checkpoints, *args, **kwargs):
@@ -644,9 +637,9 @@ class TestCompositeFixture(object):
         @fixture
         def fixture_foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "foo")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def composite2(context, checkpoints, *args, **kwargs):
@@ -662,8 +655,6 @@ class TestCompositeFixture(object):
                 use_fixture(composite2, context, checkpoints)
                 checkpoints.append("scoped-block_with_error")
                 raise RuntimeError("OOPS")
-                checkpoints.append("scoped-block.done:NOT_REACHED")
-
         # -- ENSURES:
         # * fixture1-cleanup/cleanup is called even scoped-block-error
         # * fixture2-cleanup/cleanup is called even scoped-block-error
@@ -679,9 +670,9 @@ class TestCompositeFixture(object):
         @fixture
         def fixture_foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "foo")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def composite2(context, checkpoints, *args, **kwargs):
@@ -708,16 +699,14 @@ class TestCompositeFixture(object):
         @fixture
         def fixture_foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "foo")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def bad_with_setup_error(context, checkpoints, *args, **kwargs):
             checkpoints.append("bad.setup_with_error")
             raise FixtureSetupError("OOPS")
-            yield
-            checkpoints.append("bad.cleanup:NOT_REACHED")
 
         @fixture
         def composite3(context, checkpoints, *args, **kwargs):
@@ -748,9 +737,9 @@ class TestCompositeFixture(object):
         @fixture
         def fixture_foo(context, checkpoints, *args, **kwargs):
             fixture_name = kwargs.get("name", "foo")
-            checkpoints.append("foo.setup:%s" % fixture_name)
+            checkpoints.append(f"foo.setup:{fixture_name}")
             yield
-            checkpoints.append("foo.cleanup:%s" % fixture_name)
+            checkpoints.append(f"foo.cleanup:{fixture_name}")
 
         @fixture
         def composite2(context, checkpoints, *args, **kwargs):
@@ -768,8 +757,6 @@ class TestCompositeFixture(object):
                 use_fixture(composite2, context, checkpoints)
                 checkpoints.append("scoped-block_with_error")
                 raise RuntimeError("OOPS")
-                checkpoints.append("scoped-block.done:NOT_REACHED")
-
         # -- ENSURES:
         # * fixture1-cleanup/cleanup is called even scoped-block-error
         # * fixture2-cleanup/cleanup is called even scoped-block-error
@@ -831,8 +818,6 @@ class TestCompositeFixture(object):
                 use_fixture(simplistic_composite2, context, checkpoints)
                 checkpoints.append("scoped-block_with_error")
                 raise RuntimeError("OOPS")
-                checkpoints.append("scoped-block.end:NOT_REACHED")
-
         # -- VERIFY:
         # * fixture1-setup/cleanup is called when block-error occurs
         # * fixture2-setup/cleanup is called when block-error occurs
@@ -853,9 +838,6 @@ class TestFixtureCleanup(object):
         def foo(context, checkpoints):
             checkpoints.append("foo.setup.begin")
             raise FixtureSetupError("foo")
-            checkpoints.append("foo.setup.done:NOT_REACHED")
-            yield
-            checkpoints.append("foo.cleanup:NOT_REACHED")
 
         checkpoints = []
         context = make_runtime_context()
@@ -873,9 +855,6 @@ class TestFixtureCleanup(object):
             try:
                 checkpoints.append("foo.setup.begin")
                 raise FixtureSetupError("foo")
-                checkpoints.append("foo.setup.done:NOT_REACHED")
-                yield
-                checkpoints.append("foo.cleanup:NOT_REACHED")
             finally:
                 checkpoints.append("foo.cleanup.finally")
 
@@ -896,12 +875,11 @@ class TestFixtureCleanup(object):
         @fixture
         def foo(context, checkpoints):
             def cleanup_foo(arg=""):
-                checkpoints.append("cleanup_foo:%s" % arg)
+                checkpoints.append(f"cleanup_foo:{arg}")
 
             checkpoints.append("foo.setup_with_error:foo_1")
             context.add_cleanup(cleanup_foo, "foo_1")
             raise FixtureSetupError("foo")
-            checkpoints.append("foo.setup.done:NOT_REACHED")
 
         checkpoints = []
         context = make_runtime_context()
@@ -919,14 +897,11 @@ class TestFixtureCleanup(object):
         @fixture
         def foo(context, checkpoints, **kwargs):
             def cleanup_foo(arg=""):
-                checkpoints.append("cleanup_foo:%s" % arg)
+                checkpoints.append(f"cleanup_foo:{arg}")
 
             checkpoints.append("foo.setup_with_error:foo_1")
             context.add_cleanup(cleanup_foo, "foo_1")
             raise FixtureSetupError("foo_1")
-            checkpoints.append("foo.setup.done:NOT_REACHED")
-            yield
-            checkpoints.append("foo.cleanup:NOT_REACHED")
 
         checkpoints = []
         context = make_runtime_context()
@@ -953,8 +928,6 @@ class TestFixtureCleanup(object):
                 use_fixture(foo, context, checkpoints)
                 checkpoints.append("scoped-block_with_error")
                 raise RuntimeError("scoped-block")
-                checkpoints.append("NOT_REACHED")
-
         # -- ENSURE:
         assert checkpoints == [
             "foo.setup", "scoped-block_with_error", "foo.cleanup"
@@ -977,8 +950,6 @@ class TestFixtureCleanup(object):
                 use_fixture(bar, context, checkpoints)
                 checkpoints.append("scoped-block_with_error")
                 raise RuntimeError("scoped-block")
-                checkpoints.append("NOT_REACHED")
-
         # -- ENSURE:
         assert checkpoints == [
             "bar.setup", "scoped-block_with_error", "cleanup_bar"

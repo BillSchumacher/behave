@@ -35,12 +35,8 @@ def make_scoped_class_name(obj):
     :param obj:  Object or class.
     :return Scoped-class-name (as string).
     """
-    if inspect.isclass(obj):
-        class_name = obj.__name__
-    else:
-        class_name = obj.__class__.__name__
-    module_name = getattr(obj, "__module__", None)
-    if module_name:
+    class_name = obj.__name__ if inspect.isclass(obj) else obj.__class__.__name__
+    if module_name := getattr(obj, "__module__", None):
         return "{0}:{1}".format(obj.__module__, class_name)
     # -- OTHERWISE: Builtin data type
     return class_name
@@ -97,13 +93,13 @@ class LazyObject(object):
                 resolved_object = getattr(module, self.object_name, Unknown)
                 if resolved_object is Unknown:
                     # OLD: msg = "%s: %s is Unknown" % (self.module_name, self.object_name)
-                    scoped_name = "%s:%s" % (self.module_name, self.object_name)
+                    scoped_name = f"{self.module_name}:{self.object_name}"
                     raise ClassNotFoundError(scoped_name)
                 self.resolved_object = resolved_object
             except ImportError as e:
-                self.error = "%s: %s" % (e.__class__.__name__, e)
+                self.error = f"{e.__class__.__name__}: {e}"
                 raise
-                # OR: resolved_object = self
+                        # OR: resolved_object = self
         return resolved_object
 
     def __set__(self, obj, value):

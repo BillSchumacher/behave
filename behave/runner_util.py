@@ -36,8 +36,7 @@ class FileLocationParser(object):
 
     @classmethod
     def parse(cls, text):
-        match = cls.pattern.match(text)
-        if match:
+        if match := cls.pattern.match(text):
             filename = match.group("filename").strip()
             line = int(match.group("line"))
             return FileLocation(filename, line)
@@ -108,9 +107,7 @@ class FeatureLineDatabase(object):
         """
         run_item = self.select_run_item_by_line(line)
         scenarios = []
-        if isinstance(run_item, Feature):
-            scenarios = list(run_item.walk_scenarios())
-        elif isinstance(run_item, Rule):
+        if isinstance(run_item, (Feature, Rule)):
             scenarios = list(run_item.walk_scenarios())
         elif isinstance(run_item, ScenarioOutline):
             scenarios = list(run_item.scenarios)
@@ -190,8 +187,9 @@ class FeatureScenarioLocationCollector(object):
             # if self.feature and False:
             #     self.filename = self.feature.filename
         # -- NORMAL CASE:
-        assert self.filename == location.filename, \
-            "%s <=> %s" % (self.filename, location.filename)
+        assert (
+            self.filename == location.filename
+        ), f"{self.filename} <=> {location.filename}"
         if location.line:
             self.scenario_lines.add(location.line)
         else:
@@ -496,8 +494,7 @@ def parse_features(feature_files, language=None):
         # -- NEW FEATURE:
         assert isinstance(location, FileLocation)
         filename = os.path.abspath(location.filename)
-        feature = parser.parse_file(filename, language=language)
-        if feature:
+        if feature := parser.parse_file(filename, language=language):
             # -- VALID FEATURE:
             # SKIP CORNER-CASE: Feature file without any feature(s).
             scenario_collector.feature = feature
@@ -605,18 +602,25 @@ def make_undefined_step_snippet(step, language=None):
         step_text = step
         steps = parser.parse_steps(step_text, language=language)
         step = steps[0]
-        assert step, "ParseError: %s" % step_text
+        assert step, f"ParseError: {step_text}"
 
     prefix = u"u"
     single_quote = "'"
     if single_quote in step.name:
         step.name = step.name.replace(single_quote, r"\'")
 
-    schema = u"@%s(%s'%s')\ndef step_impl(context):\n"
-    schema += u"    raise NotImplementedError(%s'STEP: %s %s')\n\n"
-    snippet = schema % (step.step_type, prefix, step.name,
-                        prefix, step.step_type.title(), step.name)
-    return snippet
+    schema = (
+        u"@%s(%s'%s')\ndef step_impl(context):\n"
+        + u"    raise NotImplementedError(%s'STEP: %s %s')\n\n"
+    )
+    return schema % (
+        step.step_type,
+        prefix,
+        step.name,
+        prefix,
+        step.step_type.title(),
+        step.name,
+    )
 
 
 def make_undefined_step_snippets(undefined_steps, make_snippet=None):
@@ -655,8 +659,10 @@ def print_undefined_step_snippets(undefined_steps, stream=None, colored=True):
     if not stream:
         stream = sys.stderr
 
-    msg = u"\nYou can implement step definitions for undefined steps with "
-    msg += u"these snippets:\n\n"
+    msg = (
+        u"\nYou can implement step definitions for undefined steps with "
+        + u"these snippets:\n\n"
+    )
     msg += u"\n".join(make_undefined_step_snippets(undefined_steps))
 
     if colored:

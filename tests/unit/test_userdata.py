@@ -162,7 +162,7 @@ class TestUserData(object):
         true_text = text
         userdata = UserData(param=true_text)
         value = userdata.getbool("param")
-        assert isinstance(value, bool), "text=%s" % true_text
+        assert isinstance(value, bool), f"text={true_text}"
         assert value is True
 
     @pytest.mark.parametrize("text", [
@@ -172,7 +172,7 @@ class TestUserData(object):
         false_text = text
         userdata = UserData(param=false_text)
         value = userdata.getbool("param")
-        assert isinstance(value, bool), "text=%s" % false_text
+        assert isinstance(value, bool), f"text={false_text}"
         assert value is False
 
     def test_getbool__with_known_param_and_invalid_text_raises_ValueError(self):
@@ -265,13 +265,13 @@ class TestUserDataNamespace(object):
         userdata = UserData({"my.scope.param": 12})
         config = UserDataNamespace("my.scope", userdata)
         assert "param" in config
-        assert not("param" not in config)
+        assert "param" in config
 
     def test_contains__when_scoped_param_not_exists(self):
         userdata = UserData({"my.scope.param": 12})
         config = UserDataNamespace("my.scope", userdata)
         assert "UNKNOWN_PARAM" not in config
-        assert not ("UNKNOWN_PARAM" in config)
+        assert "UNKNOWN_PARAM" not in config
 
     def test_getitem__returns_value_when_param_exists(self):
         userdata = UserData({"my.scope.param": "123"})
